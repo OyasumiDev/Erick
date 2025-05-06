@@ -1,0 +1,29 @@
+# Ignorar archivo de entorno
+.env
+
+# Ignorar archivos de caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Ignorar archivos temporales del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Ignorar entornos virtuales
+venv/
+env/
+ENV/
+
+# Ignorar archivos de log y bases de datos temporales
+*.log
+*.sqlite3
+
+# Ignorar configuraciones de editores comunes
+.vscode/
+.idea/
+
+# Ignorar archivos compilados u ocultos
+*.swp
+*.swo
