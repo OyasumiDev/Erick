@@ -95,7 +95,7 @@ autos = [
     ('NUEVO', 'BMW', 6),
     ('USADOS', 'JEEP', 4),
     ('USADOS', 'MERCEDES-BENZ', 4),
-    ('USADOS', 'TOYOTA', 8),
+    ('USADOS', 'TOYOTA', 8),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
     ('USADOS', 'FORD', 6),
     ('NUEVO', 'HONDA', 4),
     ('USADOS', 'VOLKSWAGEN', 6),
@@ -115,5 +115,3 @@ for auto in autos:
     respuesta = auto_model.add(auto[0], auto[1], auto[2])
     print(respuesta['message'])  # Imprime el mensaje de éxito o error
  
-
-get_all_response = auto_model.get_all()
