@@ -1,6 +1,5 @@
 import mysql.connector
 from models.auto_model import AutoModel
-
 from enum import Enum
 
 # Enum para los nombres de columnas
@@ -31,6 +30,15 @@ class AutoManager:
         except Exception as ex:
             return {"status": "error", "message": f"Error al agregar auto: {ex}"}
 
+    def ver_autos(self):
+        """Muestra todos los autos de la base de datos."""
+        query = f"SELECT * FROM {E_AUTO.TABLE.value}"
+        try:
+            autos = self.db.run_query(query, ())
+            for auto in autos:
+                print(auto)
+        except Exception as ex:
+            print(f"Error al obtener autos: {ex}")
 
 # Simulación de una conexión (ajústalo con tu conexión real)
 class MyDB:
@@ -38,27 +46,31 @@ class MyDB:
         self.connection = connection
 
     def run_query(self, query, params):
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params)
-        self.connection.commit()
+        if query.strip().upper().startswith("SELECT"):
+            return cursor.fetchall()  # Devuelve los resultados si es una consulta SELECT
+        else:
+            self.connection.commit()
         cursor.close()
 
-
-# Función principal
-def main():
-    import mysql.connector
-
-    # Conexión a MySQL (ajusta estos valores a los tuyos)
-    connection = mysql.connector.connect(
+# Función para conectar a la base de datos
+def connect_db():
+    return mysql.connector.connect(
         host="localhost",
         user="root",
         password="playerchidote77@",
         database="DB_PIA"
     )
 
+# Función principal
+def main():
+    # Conexión a la base de datos
+    connection = connect_db()
     db = MyDB(connection)
     gestor = AutoManager(db)
 
+    # Datos de autos
     autos = [
         ('NUEVO', 'NISSAN', 6),
         ('USADOS', 'NISSAN', 4),
@@ -70,128 +82,20 @@ def main():
         ('NUEVO', 'HYUNDAI', 6),
         ('USADOS', 'KIA', 6),
         ('USADOS', 'HONDA', 4),
-        ('NUEVO', 'TOYOTA', 6),
-        ('USADOS', 'CHEVROLET', 6),
-        ('USADOS', 'BMW', 8),
-        ('NUEVO', 'FORD', 4),
-        ('NUEVO', 'TOYOTA', 4),
-        ('USADOS', 'KIA', 6),
-        ('USADOS', 'MERCEDES-BENZ', 6),
-        ('USADOS', 'NISSAN', 4),
-        ('NUEVO', 'TESLA', 4),
-        ('USADOS', 'JEEP', 6),
-        ('USADOS', 'TOYOTA', 6),
-        ('NUEVO', 'NISSAN', 4),
-        ('USADOS', 'FORD', 4),
-        ('USADOS', 'HONDA', 6),
-        ('NUEVO', 'BMW', 6),
-        ('USADOS', 'MITSUBISHI', 6),
-        ('USADOS', 'CHEVROLET', 4),
-        ('NUEVO', 'TESLA', 6),
-        ('USADOS', 'KIA', 6),
-        ('USADOS', 'FORD', 4),
-        ('NUEVO', 'MITSUBISHI', 6),
-        ('USADOS', 'HONDA', 6),
-        ('USADOS', 'KIA', 4),
-        ('NUEVO', 'VOLKSWAGEN', 4),
-        ('USADOS', 'TOYOTA', 6),
-        ('NUEVO', 'BMW', 8),
-        ('USADOS', 'HYUNDAI', 6),
-        ('USADOS', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'NISSAN', 4),
-        ('USADOS', 'CHEVROLET', 6),
-        ('USADOS', 'FORD', 4),
-        ('NUEVO', 'HONDA', 4),
-        ('NUEVO', 'TOYOTA', 6),
-        ('USADOS', 'JEEP', 6),
-        ('USADOS', 'VOLKSWAGEN', 4),
-        ('USADOS', 'MITSUBISHI', 6),
-        ('NUEVO', 'BMW', 8),
-        ('USADOS', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'HYUNDAI', 6),
-        ('USADOS', 'HONDA', 6),
-        ('NUEVO', 'FORD', 4),
-        ('USADOS', 'CHEVROLET', 4),
-        ('NUEVO', 'JEEP', 6),
-        ('USADOS', 'KIA', 4),
-        ('NUEVO', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'NISSAN', 6),
-        ('USADOS', 'TOYOTA', 6),
-        ('NUEVO', 'BMW', 8),
-        ('USADOS', 'HYUNDAI', 6),
-        ('USADOS', 'TOYOTA', 6),
-        ('NUEVO', 'NISSAN', 6),
-        ('USADOS', 'MITSUBISHI', 6),
-        ('USADOS', 'FORD', 4),
-        ('USADOS', 'HONDA', 4),
-        ('USADOS', 'JEEP', 6),
-        ('NUEVO', 'TOYOTA', 6),
-        ('USADOS', 'NISSAN', 4),
-        ('NUEVO', 'HYUNDAI', 4),
-        ('USADOS', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'KIA', 4),
-        ('USADOS', 'HONDA', 6),
-        ('NUEVO', 'MITSUBISHI', 6),
-        ('USADOS', 'FORD', 6),
-        ('USADOS', 'BMW', 8),
-        ('USADOS', 'JEEP', 6),
-        ('NUEVO', 'VOLKSWAGEN', 4),
-        ('USADOS', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'HYUNDAI', 6),
-        ('USADOS', 'CHEVROLET', 6),
-        ('NUEVO', 'NISSAN', 4),
-        ('USADOS', 'TOYOTA', 6),
-        ('NUEVO', 'MITSUBISHI', 4),
-        ('USADOS', 'HONDA', 6),
-        ('USADOS', 'VOLKSWAGEN', 4),
-        ('NUEVO', 'CHEVROLET', 4),
-        ('USADOS', 'FORD', 6),
-        ('USADOS', 'KIA', 4),
-        ('NUEVO', 'BMW', 8),
-        ('USADOS', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'HONDA', 4),
-        ('NUEVO', 'VOLKSWAGEN', 4),
-        ('USADOS', 'TOYOTA', 6),
-        ('NUEVO', 'FORD', 4),
-        ('USADOS', 'BMW', 6),
-        ('USADOS', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'CHEVROLET', 4),
-        ('NUEVO', 'HONDA', 6),
-        ('USADOS', 'KIA', 4),
-        ('USADOS', 'MERCEDES-BENZ', 8),
-        ('USADOS', 'JEEP', 6)
+        # Agrega más autos aquí...
     ]
 
+    # Insertar autos
     for estado, marca, cilindros in autos:
         resultado = gestor.add(estado, marca, cilindros)
         print(resultado["message"])
 
-    connection.close()
+    # Ver autos
+    print("\nListado de autos en la base de datos:")
+    gestor.ver_autos()
 
+    # Cerrar la conexión
+    connection.close()
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-def ver_autos():
-    conexion = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="playerchidote77@",
-        database="DB_PIA"
-    )
-    cursor = conexion.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM autos")
-    autos = cursor.fetchall()
-
-    for auto in autos:
-        print(auto)
-
-    conexion.close()
-
-
