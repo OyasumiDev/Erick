@@ -2,18 +2,35 @@ import mysql.connector
 from models.auto_model import AutoModel
 from enum import Enum
 
-# Enum para los nombres de columnas
-class E_AUTO(Enum):
-    TABLE = 'autos'
-    ID = 'ID'
-    ESTADO_AUTO = 'ESTADO_AUTO'
-    MARCA_AUTO = 'MARCA_AUTO'
-    NUM_CILINDROS = 'NUM_CILINDROS'
+# Asegúrate de tener bien configurado tu modelo para la conexión a la base de datos
+class DatabaseMysql:
+    def __init__(self):
+        self.connection = mysql.connector.connect(
+            host="localhost",  # Cambia esto según tu configuración
+            user="root",       # Cambia esto según tu configuración
+            password="password",  # Cambia esto según tu configuración
+            database="nombre_base_datos"  # Cambia esto por el nombre de tu base de datos
+        )
+        self.cursor = self.connection.cursor(dictionary=True)
 
-# Clase que maneja los autos
-class AutoManager:
-    def __init__(self, db_connection):
-        self.db = db_connection  # Debe tener un método run_query(query, params)
+    def run_query(self, query, params=None):
+        self.cursor.execute(query, params or ())
+        self.connection.commit()
+
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
+
+class E_AUTO(Enum):
+    TABLE = "autos"
+    ESTADO_AUTO = "estado_auto"
+    MARCA_AUTO = "marca_auto"
+    NUM_CILINDROS = "num_cilindros"
+    ID = "id"
+
+class AutoModel:
+    def __init__(self):
+        self.db = DatabaseMysql()
 
     def add(self, estado_auto: str, marca: str, cilindros: int) -> dict:
         """Agrega un nuevo auto a la base de datos."""
@@ -26,76 +43,124 @@ class AutoManager:
         """
         try:
             self.db.run_query(query, (estado_auto, marca, cilindros))
-            return {"status": "success", "message": "Auto agregado correctamente"}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al agregar auto: {ex}"}
+            return {"status": "success", "message": f"Auto {marca} agregado correctamente"}
+        except mysql.connector.Error as err:
+            return {"status": "error", "message": f"Error al agregar auto {marca}: {err}"}
 
-    def ver_autos(self):
-        """Muestra todos los autos de la base de datos."""
-        query = f"SELECT * FROM {E_AUTO.TABLE.value}"
-        try:
-            autos = self.db.run_query(query, ())
-            for auto in autos:
-                print(auto)
-        except Exception as ex:
-            print(f"Error al obtener autos: {ex}")
+    def close_connection(self):
+        self.db.close()
 
-# Simulación de una conexión (ajústalo con tu conexión real)
-class MyDB:
-    def __init__(self, connection):
-        self.connection = connection
+# Lista de autos a insertar
+autos = [
+    ('NUEVO', 'NISSAN', 6),
+    ('USADOS', 'NISSAN', 4),
+    ('NUEVO', 'CHEVROLET', 6),
+    ('USADOS', 'VOLKSWAGEN', 4),
+    ('USADOS', 'HONDA', 8),
+    ('NUEVO', 'TOYOTA', 4),
+    ('USADOS', 'FORD', 4),
+    ('NUEVO', 'HYUNDAI', 6),
+    ('USADOS', 'KIA', 6),
+    ('USADOS', 'HONDA', 4),
+    ('NUEVO', 'TOYOTA', 6),
+    ('USADOS', 'CHEVROLET', 6),
+    ('USADOS', 'BMW', 8),
+    ('NUEVO', 'FORD', 4),
+    ('NUEVO', 'TOYOTA', 4),
+    ('USADOS', 'KIA', 6),
+    ('USADOS', 'MERCEDES-BENZ', 6),
+    ('USADOS', 'NISSAN', 4),
+    ('NUEVO', 'TESLA', 4),
+    ('USADOS', 'JEEP', 6),
+    ('USADOS', 'TOYOTA', 6),
+    ('NUEVO', 'NISSAN', 4),
+    ('USADOS', 'FORD', 4),
+    ('USADOS', 'HONDA', 6),
+    ('NUEVO', 'BMW', 6),
+    ('USADOS', 'MITSUBISHI', 6),
+    ('USADOS', 'CHEVROLET', 4),
+    ('NUEVO', 'TESLA', 6),
+    ('USADOS', 'KIA', 6),
+    ('USADOS', 'FORD', 4),
+    ('NUEVO', 'MITSUBISHI', 6),
+    ('USADOS', 'HONDA', 6),
+    ('USADOS', 'KIA', 4),
+    ('NUEVO', 'VOLKSWAGEN', 4),
+    ('USADOS', 'TOYOTA', 6),
+    ('NUEVO', 'BMW', 8),
+    ('USADOS', 'HYUNDAI', 6),
+    ('USADOS', 'MERCEDES-BENZ', 8),
+    ('USADOS', 'NISSAN', 4),
+    ('USADOS', 'CHEVROLET', 6),
+    ('USADOS', 'FORD', 4),
+    ('NUEVO', 'HONDA', 4),
+    ('NUEVO', 'TOYOTA', 6),
+    ('USADOS', 'JEEP', 6),
+    ('USADOS', 'VOLKSWAGEN', 4),
+    ('USADOS', 'MITSUBISHI', 6),
+    ('NUEVO', 'BMW', 8),
+    ('USADOS', 'MERCEDES-BENZ', 8),
+    ('USADOS', 'HYUNDAI', 6),
+    ('USADOS', 'HONDA', 6),
+    ('NUEVO', 'FORD', 6),
+    ('USADOS', 'TOYOTA', 4),
+    ('USADOS', 'HONDA', 6),
+    ('NUEVO', 'KIA', 6),
+    ('USADOS', 'CHEVROLET', 6),
+    ('NUEVO', 'BMW', 4),
+    ('USADOS', 'VOLKSWAGEN', 6),
+    ('USADOS', 'TOYOTA', 4),
+    ('NUEVO', 'HONDA', 8),
+    ('USADOS', 'MITSUBISHI', 6),
+    ('NUEVO', 'FORD', 4),
+    ('USADOS', 'TESLA', 6),
+    ('NUEVO', 'NISSAN', 4),
+    ('USADOS', 'HONDA', 6),
+    ('USADOS', 'FORD', 4),
+    ('USADOS', 'CHEVROLET', 8),
+    ('NUEVO', 'HONDA', 6),
+    ('USADOS', 'MERCEDES-BENZ', 4),
+    ('NUEVO', 'KIA', 4),
+    ('USADOS', 'BMW', 6),
+    ('USADOS', 'TESLA', 8),
+    ('NUEVO', 'NISSAN', 4),
+    ('USADOS', 'HYUNDAI', 6),
+    ('NUEVO', 'FORD', 6),
+    ('USADOS', 'HONDA', 8),
+    ('USADOS', 'TOYOTA', 4),
+    ('NUEVO', 'KIA', 6),
+    ('USADOS', 'MERCEDES-BENZ', 6),
+    ('NUEVO', 'VOLKSWAGEN', 6),
+    ('USADOS', 'CHEVROLET', 4),
+    ('NUEVO', 'MITSUBISHI', 6),
+    ('USADOS', 'NISSAN', 4),
+    ('NUEVO', 'FORD', 8),
+    ('USADOS', 'HONDA', 4),
+    ('USADOS', 'KIA', 6),
+    ('NUEVO', 'BMW', 6),
+    ('USADOS', 'JEEP', 4),
+    ('USADOS', 'MERCEDES-BENZ', 4),
+    ('USADOS', 'TOYOTA', 8),
+    ('USADOS', 'FORD', 6),
+    ('NUEVO', 'HONDA', 4),
+    ('USADOS', 'VOLKSWAGEN', 6),
+    ('USADOS', 'MITSUBISHI', 4),
+    ('USADOS', 'CHEVROLET', 8),
+    ('USADOS', 'NISSAN', 4),
+    ('NUEVO', 'BMW', 6),
+    ('USADOS', 'FORD', 6),
+    ('USADOS', 'HONDA', 4),
+    ('USADOS', 'TOYOTA', 4),
+    ('NUEVO', 'HYUNDAI', 6)
+]
 
-    def run_query(self, query, params):
-        cursor = self.connection.cursor(dictionary=True)
-        cursor.execute(query, params)
-        if query.strip().upper().startswith("SELECT"):
-            return cursor.fetchall()  # Devuelve los resultados si es una consulta SELECT
-        else:
-            self.connection.commit()
-        cursor.close()
+# Instanciamos AutoModel
+auto_model = AutoModel()
 
-# Función para conectar a la base de datos
-def connect_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="playerchidote77@",
-        database="DB_PIA"
-    )
+# Insertamos los autos
+for auto in autos:
+    respuesta = auto_model.add(auto[0], auto[1], auto[2])
+    print(respuesta['message'])  # Imprime el mensaje de éxito o error
 
-# Función principal
-def main():
-    # Conexión a la base de datos
-    connection = connect_db()
-    db = MyDB(connection)
-    gestor = AutoManager(db)
-
-    # Datos de autos
-    autos = [
-        ('NUEVO', 'NISSAN', 6),
-        ('USADOS', 'NISSAN', 4),
-        ('NUEVO', 'CHEVROLET', 6),
-        ('USADOS', 'VOLKSWAGEN', 4),
-        ('USADOS', 'HONDA', 8),
-        ('NUEVO', 'TOYOTA', 4),
-        ('USADOS', 'FORD', 4),
-        ('NUEVO', 'HYUNDAI', 6),
-        ('USADOS', 'KIA', 6),
-        ('USADOS', 'HONDA', 4),
-        # Agrega más autos aquí...
-    ]
-
-    # Insertar autos
-    for estado, marca, cilindros in autos:
-        resultado = gestor.add(estado, marca, cilindros)
-        print(resultado["message"])
-
-    # Ver autos
-    print("\nListado de autos en la base de datos:")
-    gestor.ver_autos()
-
-    # Cerrar la conexión
-    connection.close()
-
-if __name__ == "__main__":
-    main()
+# Cerramos la conexión después de las inserciones
+auto_model.close_connection()
