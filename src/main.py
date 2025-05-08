@@ -1,117 +1,22 @@
-import mysql.connector
-from models.auto_model import AutoModel
-from enum import Enum
+from database.database_mysql import DatabaseMysql
+from config.visual.menu_visual import menu
+from enums.e_autos import E_AUTO
 
-# Instanciamos AutoModel
-auto_model = AutoModel()
+def resetear_base_datos():
+    db = DatabaseMysql()
+    try:
+        # Elimina la tabla si existe
+        drop_query = f"DROP TABLE IF EXISTS {E_AUTO.TABLE.value}"
+        db.run_query(drop_query)
+        print("🧨 Tabla eliminada correctamente")
 
-# Lista de autos a insertar
-autos = [
-    ('NUEVO', 'NISSAN', 6),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'CHEVROLET', 6),
-    ('USADOS', 'VOLKSWAGEN', 4),
-    ('USADOS', 'HONDA', 8),
-    ('NUEVO', 'TOYOTA', 4),
-    ('USADOS', 'FORD', 4),
-    ('NUEVO', 'HYUNDAI', 6),
-    ('USADOS', 'KIA', 6),
-    ('USADOS', 'HONDA', 4),
-    ('NUEVO', 'TOYOTA', 6),
-    ('USADOS', 'CHEVROLET', 6),
-    ('USADOS', 'BMW', 8),
-    ('NUEVO', 'FORD', 4),
-    ('NUEVO', 'TOYOTA', 4),
-    ('USADOS', 'KIA', 6),
-    ('USADOS', 'MERCEDES-BENZ', 6),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'TESLA', 4),
-    ('USADOS', 'JEEP', 6),
-    ('USADOS', 'TOYOTA', 6),
-    ('NUEVO', 'NISSAN', 4),
-    ('USADOS', 'FORD', 4),
-    ('USADOS', 'HONDA', 6),
-    ('NUEVO', 'BMW', 6),
-    ('USADOS', 'MITSUBISHI', 6),
-    ('USADOS', 'CHEVROLET', 4),
-    ('NUEVO', 'TESLA', 6),
-    ('USADOS', 'KIA', 6),
-    ('USADOS', 'FORD', 4),
-    ('NUEVO', 'MITSUBISHI', 6),
-    ('USADOS', 'HONDA', 6),
-    ('USADOS', 'KIA', 4),
-    ('NUEVO', 'VOLKSWAGEN', 4),
-    ('USADOS', 'TOYOTA', 6),
-    ('NUEVO', 'BMW', 8),
-    ('USADOS', 'HYUNDAI', 6),
-    ('USADOS', 'MERCEDES-BENZ', 8),
-    ('USADOS', 'NISSAN', 4),
-    ('USADOS', 'CHEVROLET', 6),
-    ('USADOS', 'FORD', 4),
-    ('NUEVO', 'HONDA', 4),
-    ('NUEVO', 'TOYOTA', 6),
-    ('USADOS', 'JEEP', 6),
-    ('USADOS', 'VOLKSWAGEN', 4),
-    ('USADOS', 'MITSUBISHI', 6),
-    ('NUEVO', 'BMW', 8),
-    ('USADOS', 'MERCEDES-BENZ', 8),
-    ('USADOS', 'HYUNDAI', 6),
-    ('USADOS', 'HONDA', 6),
-    ('NUEVO', 'FORD', 6),
-    ('USADOS', 'TOYOTA', 4),
-    ('USADOS', 'HONDA', 6),
-    ('NUEVO', 'KIA', 6),
-    ('USADOS', 'CHEVROLET', 6),
-    ('NUEVO', 'BMW', 4),
-    ('USADOS', 'VOLKSWAGEN', 6),
-    ('USADOS', 'TOYOTA', 4),
-    ('NUEVO', 'HONDA', 8),
-    ('USADOS', 'MITSUBISHI', 6),
-    ('NUEVO', 'FORD', 4),
-    ('USADOS', 'TESLA', 6),
-    ('NUEVO', 'NISSAN', 4),
-    ('USADOS', 'HONDA', 6),
-    ('USADOS', 'FORD', 4),
-    ('USADOS', 'CHEVROLET', 8),
-    ('NUEVO', 'HONDA', 6),
-    ('USADOS', 'MERCEDES-BENZ', 4),
-    ('NUEVO', 'KIA', 4),
-    ('USADOS', 'BMW', 6),
-    ('USADOS', 'TESLA', 8),
-    ('NUEVO', 'NISSAN', 4),
-    ('USADOS', 'HYUNDAI', 6),
-    ('NUEVO', 'FORD', 6),
-    ('USADOS', 'HONDA', 8),
-    ('USADOS', 'TOYOTA', 4),
-    ('NUEVO', 'KIA', 6),
-    ('USADOS', 'MERCEDES-BENZ', 6),
-    ('NUEVO', 'VOLKSWAGEN', 6),
-    ('USADOS', 'CHEVROLET', 4),
-    ('NUEVO', 'MITSUBISHI', 6),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'FORD', 8),
-    ('USADOS', 'HONDA', 4),
-    ('USADOS', 'KIA', 6),
-    ('NUEVO', 'BMW', 6),
-    ('USADOS', 'JEEP', 4),
-    ('USADOS', 'MERCEDES-BENZ', 4),
-    ('USADOS', 'TOYOTA', 8),                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-    ('USADOS', 'FORD', 6),
-    ('NUEVO', 'HONDA', 4),
-    ('USADOS', 'VOLKSWAGEN', 6),
-    ('USADOS', 'MITSUBISHI', 4),
-    ('USADOS', 'CHEVROLET', 8),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'BMW', 6),
-    ('USADOS', 'FORD', 6),
-    ('USADOS', 'HONDA', 4),
-    ('USADOS', 'TOYOTA', 4),
-    ('NUEVO', 'HYUNDAI', 6)
-]
+        # Recrea la tabla usando AutoModel (si la tienes definida así)
+        from models.auto_model import AutoModel
+        AutoModel()
+        print("✅ Tabla recreada correctamente")
+    except Exception as e:
+        print(f"❌ Error reseteando la base de datos: {e}")
 
-
-# Insertamos los autos
-for auto in autos:
-    respuesta = auto_model.add(auto[0], auto[1], auto[2])
-    print(respuesta['message'])  # Imprime el mensaje de éxito o error
- 
+if __name__ == "__main__":
+    resetear_base_datos()  # Esto resetea la base
+    menu()  # Esto abre el menú visual

@@ -104,3 +104,4 @@ class DatabaseMysql:
         except Exception as e:
             print(f"❌ Error verificando tabla autos: {e}")
             return True
+

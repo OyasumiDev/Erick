@@ -63,3 +63,12 @@ class AutoModel:
             return {"status": "success", "data": data}
         except Exception as ex:
             return {"status": "error", "message": f"Error al obtener auto: {ex}"}
+
+    def get_compras(self) -> dict:
+        """Obtiene todas las compras de autos registradas."""
+        query = f"SELECT * FROM {E_AUTO.TABLE.value} ORDER BY {E_AUTO.ID.value} ASC"
+        try:
+            data = self.db.get_all(query)
+            return {"status": "success", "data": data}
+        except Exception as ex:
+            return {"status": "error", "message": f"Error al obtener compras: {ex}"}
