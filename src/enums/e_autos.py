@@ -6,4 +6,5 @@ class E_AUTO(Enum):
     ESTADO_AUTO = "estado"
     MARCA_AUTO = "marca"
     NUM_CILINDROS = "cilindros"
+    ANIO = "anio"  # Añadido el atributo ANIO
     PRECIO = "precio"

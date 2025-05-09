@@ -39,7 +39,8 @@ def ventana_compras():
     def cargar_autos():
         db = DatabaseMysql()
         query = f"SELECT * FROM {E_AUTO.TABLE.value} ORDER BY {E_AUTO.ID.value}"
-        resultado = db.execute_query(query)
+        resultado = db.get_all(query)
+
 
         if resultado["status"] == "success":
             autos = resultado["data"]
