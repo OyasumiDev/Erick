@@ -1,6 +1,6 @@
-from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
 import mysql.connector
 from mysql.connector import Error
+from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
 from enums.e_autos import E_AUTO
 from helpers.class_singletone import class_singleton
 
@@ -55,10 +55,11 @@ class DatabaseMysql:
         except Error as e:
             print(f"❌ Error al conectar: {e}")
 
-    def disconnect(self) -> None:
-        if hasattr(self, "connection") and self.connection:
+    def close(self) -> None:
+        """Cierra la conexión a la base de datos."""
+        if hasattr(self, 'connection') and self.connection:
             self.connection.close()
-            print("ℹ️ Conexión cerrada a la base de datos")
+            print("🔒 Conexión cerrada correctamente.")
 
     def run_query(self, query: str, params: tuple = ()) -> None:
         try:
@@ -87,7 +88,6 @@ class DatabaseMysql:
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
-
     def is_autos_empty(self) -> bool:
         try:
             query = f"SELECT COUNT(*) AS total FROM `{E_AUTO.TABLE.value}`"
@@ -108,9 +108,3 @@ class DatabaseMysql:
             return {"status": "success", "message": "Consulta ejecutada correctamente"}
         except Error as e:
             return {"status": "error", "message": str(e)}
-
-
-def close(self):
-    if self.connection:
-        self.connection.close()
-        print("🔒 Conexión cerrada correctamente.")
