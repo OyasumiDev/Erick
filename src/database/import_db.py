@@ -1,3 +1,5 @@
+from models.auto_model import AutoModel
+
 def import_db():
     auto_model = AutoModel()
     

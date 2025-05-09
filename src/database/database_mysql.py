@@ -1,9 +1,8 @@
 from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
-import mysql.connector as mysql
+import mysql.connector
 from mysql.connector import Error
-from enums.e_autos import E_AUTO 
+from enums.e_autos import E_AUTO
 from helpers.class_singletone import class_singleton
-# Asegúrate de importar correctamente tu Enum
 
 @class_singleton
 class DatabaseMysql:
@@ -17,11 +16,9 @@ class DatabaseMysql:
         self._verificar_y_crear_base_datos()
         self._connect()
 
-        
     def _verificar_y_crear_base_datos(self) -> bool:
-        """Verifica si existe la base de datos y la crea si no existe."""
         try:
-            tmp = mysql.connect(
+            tmp = mysql.connector.connect(
                 host=self.host,
                 port=self.port,
                 user=self.user,
@@ -35,8 +32,7 @@ class DatabaseMysql:
             )
             if cur.fetchone() is None:
                 cur.execute(
-                    f"CREATE DATABASE `{self.database}` "
-                    "DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+                    f"CREATE DATABASE `{self.database}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
                 )
                 print("🛠️ Base de datos creada")
             cur.close()
@@ -47,9 +43,8 @@ class DatabaseMysql:
         return True
 
     def _connect(self) -> None:
-        """Conecta a la base de datos."""
         try:
-            self.connection = mysql.connect(
+            self.connection = mysql.connector.connect(
                 host=self.host,
                 port=self.port,
                 user=self.user,
@@ -61,13 +56,11 @@ class DatabaseMysql:
             print(f"❌ Error al conectar: {e}")
 
     def disconnect(self) -> None:
-        """Cierra la conexión a la base de datos."""
         if hasattr(self, "connection") and self.connection:
             self.connection.close()
             print("ℹ️ Conexión cerrada a la base de datos")
 
     def run_query(self, query: str, params: tuple = ()) -> None:
-        """Ejecuta una consulta de modificación (INSERT, UPDATE, DELETE)."""
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(query, params)
@@ -77,7 +70,6 @@ class DatabaseMysql:
             raise
 
     def get_one(self, query: str, params: tuple = (), dictionary: bool = True):
-        """Obtiene un solo registro."""
         try:
             with self.connection.cursor(dictionary=dictionary) as cursor:
                 cursor.execute(query, params)
@@ -87,7 +79,6 @@ class DatabaseMysql:
             return None
 
     def get_all(self, query: str, params: tuple = (), dictionary: bool = True):
-        """Obtiene una lista de registros."""
         try:
             with self.connection.cursor(dictionary=dictionary) as cursor:
                 cursor.execute(query, params)
@@ -99,7 +90,6 @@ class DatabaseMysql:
             return []
 
     def is_autos_empty(self) -> bool:
-        """Verifica si la tabla de autos está vacía."""
         try:
             query = f"SELECT COUNT(*) AS total FROM `{E_AUTO.TABLE.value}`"
             result = self.get_one(query)
@@ -110,13 +100,12 @@ class DatabaseMysql:
 
     def execute_query(self, query, params=None):
         if not self.connection:
-            self._connect()  # Llama al método _connect() en lugar de 'connect()'
+            self._connect()
 
         try:
-            # Crea un cursor dentro del método
             with self.connection.cursor() as cursor:
                 cursor.execute(query, params)
                 self.connection.commit()
             return {"status": "success", "message": "Consulta ejecutada correctamente"}
-        except mysql.connector.Error as e:
+        except Error as e:
             return {"status": "error", "message": str(e)}
