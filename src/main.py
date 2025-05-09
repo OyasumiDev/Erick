@@ -1,6 +1,6 @@
 from config.visual.menu_visual import mostrar_menu
 from database.database_mysql import DatabaseMysql
-from import_db import import_db
+from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
 from models.auto_model import AutoModel
 from helpers.class_singletone import class_singleton
@@ -38,7 +38,6 @@ def resetear_base_datos():
 def main():
     """Punto de entrada del sistema de autos."""
     try:
-        # Primero, eliminar el __pycache__
         print("🧹 Limpiando __pycache__...")
         eliminar_pycache()
 
@@ -46,7 +45,8 @@ def main():
         resetear_base_datos()
 
         print("📥 Cargando autos por defecto...")
-        import_db()
+        db_importador = DatabaseImport()
+        db_importador.import_db()
 
         print("🚗 Iniciando menú visual...")
         mostrar_menu()

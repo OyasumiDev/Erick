@@ -108,3 +108,9 @@ class DatabaseMysql:
             return {"status": "success", "message": "Consulta ejecutada correctamente"}
         except Error as e:
             return {"status": "error", "message": str(e)}
+
+
+def close(self):
+    if self.connection:
+        self.connection.close()
+        print("🔒 Conexión cerrada correctamente.")
