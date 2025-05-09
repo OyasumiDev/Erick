@@ -4,46 +4,49 @@ from database.import_db import import_db
 from enums.e_autos import E_AUTO
 
 
-
 def resetear_base_datos():
-    # Crear una instancia de la clase DatabaseMysql para conectarse a la base de datos
+    """Elimina la tabla de autos y la recrea desde cero usando los enums."""
     db = DatabaseMysql()
 
-    # Eliminar la tabla si ya existe
-    drop_query = f"DROP TABLE IF EXISTS {E_AUTO.TABLE.value}"
-    db.execute_query(drop_query)
+    try:
+        print("🔄 Eliminando tabla anterior (si existe)...")
+        drop_query = f"DROP TABLE IF EXISTS {E_AUTO.TABLE.value}"
+        db.execute_query(drop_query)
 
-    # Crear la tabla desde cero
-    create_query = f"""
-    CREATE TABLE {E_AUTO.TABLE.value} (
-        {E_AUTO.ID.value} INT AUTO_INCREMENT PRIMARY KEY,
-        {E_AUTO.ESTADO_AUTO.value} VARCHAR(20),
-        {E_AUTO.MARCA_AUTO.value} VARCHAR(50),
-        {E_AUTO.NUM_CILINDROS.value} INT,
-        {E_AUTO.ANIO.value} INT,
-        {E_AUTO.PRECIO.value} FLOAT
-    )
-    """
-    db.execute_query(create_query)
-    print("✅ Base de datos reseteada y tabla creada correctamente.")
+        print("📦 Creando nueva tabla...")
+        create_query = f"""
+        CREATE TABLE {E_AUTO.TABLE.value} (
+            {E_AUTO.ID.value} INT AUTO_INCREMENT PRIMARY KEY,
+            {E_AUTO.ESTADO_AUTO.value} ENUM('NUEVO', 'USADOS') NOT NULL,
+            {E_AUTO.MARCA_AUTO.value} VARCHAR(100) NOT NULL,
+            {E_AUTO.NUM_CILINDROS.value} TINYINT UNSIGNED NOT NULL,
+            {E_AUTO.ANIO.value} YEAR NOT NULL,
+            {E_AUTO.PRECIO.value} DECIMAL(10, 2) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """
+        db.execute_query(create_query)
+        print("✅ Tabla creada correctamente.")
+    except Exception as e:
+        print(f"❌ Error al resetear base de datos: {e}")
+    finally:
+        db.close()
+
 
 def main():
+    """Punto de entrada del sistema de autos."""
     try:
-        # Reiniciar la base de datos y tabla
-        print("🔄 Reiniciando base de datos...")
+        print("🔁 Reiniciando base de datos...")
         resetear_base_datos()
-        
-        # Insertar los datos por defecto en la base de datos
-        print("📥 Insertando autos por defecto...")
+
+        print("📥 Cargando autos por defecto...")
         import_db()
-        
-        # Iniciar el sistema visual (menú)
-        print("🚗 Iniciando sistema visual...")
+
+        print("🚗 Iniciando menú visual...")
         mostrar_menu()
+
     except Exception as e:
-        # Capturar cualquier error inesperado
         print(f"❌ Error general en el programa: {e}")
 
-# Punto de entrada del programa
+
 if __name__ == "__main__":
     main()

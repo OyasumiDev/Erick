@@ -14,7 +14,7 @@ class AutoModel:
                 WHERE table_schema = %s AND table_name = %s
             """
             result = self.db.get_one(query, (self.db.database, E_AUTO.TABLE.value))
-            if result.get("c", 0) == 0:
+            if result and result.get("c", 0) == 0:
                 print(f"⚠️ La tabla {E_AUTO.TABLE.value} no existe. Creando...")
                 create_query = f"""
                     CREATE TABLE IF NOT EXISTS {E_AUTO.TABLE.value} (
@@ -34,6 +34,13 @@ class AutoModel:
             print(f"❌ Error al verificar o crear tabla: {e}")
 
     def add(self, estado: str, marca: str, cilindros: int, anio: int, precio: float) -> dict:
+        if estado not in ("NUEVO", "USADOS"):
+            return {"status": "error", "message": "Estado inválido. Debe ser 'NUEVO' o 'USADOS'"}
+        if cilindros <= 0:
+            return {"status": "error", "message": "El número de cilindros debe ser mayor a 0"}
+        if precio <= 0:
+            return {"status": "error", "message": "El precio debe ser mayor a 0"}
+
         query = f"""
         INSERT INTO {E_AUTO.TABLE.value} 
         ({E_AUTO.ESTADO_AUTO.value}, {E_AUTO.MARCA_AUTO.value}, {E_AUTO.NUM_CILINDROS.value}, {E_AUTO.ANIO.value}, {E_AUTO.PRECIO.value}) 
@@ -49,15 +56,14 @@ class AutoModel:
         query = f"SELECT * FROM {E_AUTO.TABLE.value} ORDER BY {E_AUTO.ID.value} ASC"
         try:
             data = self.db.get_all(query)
-            
-            # Convertir los resultados de la lista de tuplas a diccionarios
+
             columns = [E_AUTO.ID.value, E_AUTO.ESTADO_AUTO.value, E_AUTO.MARCA_AUTO.value, 
                        E_AUTO.NUM_CILINDROS.value, E_AUTO.ANIO.value, E_AUTO.PRECIO.value]
             auto_list = []
             for auto in data:
                 auto_dict = {columns[i]: auto[i] for i in range(len(columns))}
                 auto_list.append(auto_dict)
-            
+
             return {"status": "success", "data": auto_list}
         except Exception as ex:
             return {"status": "error", "message": f"Error al obtener autos: {ex}"}
@@ -71,18 +77,16 @@ class AutoModel:
             return {"status": "error", "message": f"Error al obtener auto: {ex}"}
 
     def get_compras(self) -> dict:
-        query = f"SELECT * FROM {E_AUTO.TABLE.value} ORDER BY {E_AUTO.ID.value} ASC"
+        return self.get_all()
+
+    def bulk_insert(self, autos: list[tuple]) -> dict:
+        query = f"""
+        INSERT INTO {E_AUTO.TABLE.value} 
+        ({E_AUTO.ESTADO_AUTO.value}, {E_AUTO.MARCA_AUTO.value}, {E_AUTO.NUM_CILINDROS.value}, {E_AUTO.ANIO.value}, {E_AUTO.PRECIO.value}) 
+        VALUES (%s, %s, %s, %s, %s)
+        """
         try:
-            data = self.db.get_all(query)
-            
-            # Convertir los resultados de la lista de tuplas a diccionarios
-            columns = [E_AUTO.ID.value, E_AUTO.ESTADO_AUTO.value, E_AUTO.MARCA_AUTO.value, 
-                       E_AUTO.NUM_CILINDROS.value, E_AUTO.ANIO.value, E_AUTO.PRECIO.value]
-            auto_list = []
-            for auto in data:
-                auto_dict = {columns[i]: auto[i] for i in range(len(columns))}
-                auto_list.append(auto_dict)
-            
-            return {"status": "success", "data": auto_list}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al obtener compras: {ex}"}
+            self.db.executemany_query(query, autos)
+            return {"status": "success", "message": f"{len(autos)} autos insertados correctamente."}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
