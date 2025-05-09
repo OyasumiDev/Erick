@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from config.visual.menu_compras import ventana_compras  
-from config.visual.menu_ventas import ventana_ventas  
+from config.visual.menu_compras import ventana_compras
+from config.visual.menu_ventas import ventana_ventas
 
 def mostrar_menu():
     ventana_menu = tk.Tk()

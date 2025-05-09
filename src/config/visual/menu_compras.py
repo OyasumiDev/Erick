@@ -1,51 +1,53 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 from models.auto_model import AutoModel
 
-auto_model = AutoModel()
+def cargar_autos(tree):
+    tree.delete(*tree.get_children())  # Limpia la tabla
 
-def cargar_autos(tree: ttk.Treeview):
-    resultado = auto_model.get_all()
-    tree.delete(*tree.get_children())
+    modelo = AutoModel()
+    resultado = modelo.get_compras()
 
     if resultado["status"] == "success":
         for auto in resultado["data"]:
-            tree.insert("", "end", values=(
-                auto[0],  # id
-                auto[1],  # estado_auto
-                auto[2],  # marca_auto
-                auto[3],  # num_cilindros
-                auto[4],  # anio
-                f"${auto[5]:,.2f}"  # precio
-            ))
+            try:
+                print(f"📦 Auto leído: {auto}")  # Debug
+                tree.insert("", "end", values=(
+                    auto[0],  # ID
+                    auto[1],  # Estado
+                    auto[2],  # Marca
+                    auto[3],  # Cilindros
+                    auto[4],  # Año
+                    f"${float(auto[5]):,.2f}"  # Precio formateado
+                ))
+            except Exception as e:
+                print(f"❌ Error al cargar auto: {e}")
     else:
-        messagebox.showerror("Error", f"No se pudieron cargar los autos.\n{resultado['message']}")
+        print(f"❌ Error al obtener autos: {resultado['message']}")
 
 def ventana_compras():
     ventana = tk.Toplevel()
-    ventana.title("📋 Lista de Autos Disponibles")
-    ventana.geometry("800x500")
+    ventana.title("🛒 Módulo de Compras")
+    ventana.geometry("1000x500")
 
-    label = tk.Label(ventana, text="Autos en venta", font=("Helvetica", 18, "bold"))
-    label.pack(pady=10)
+    tree = ttk.Treeview(ventana, columns=("ID", "Estado", "Marca", "Cilindros", "Año", "Precio"), show="headings")
+    tree.heading("ID", text="ID")
+    tree.heading("Estado", text="Estado")
+    tree.heading("Marca", text="Marca")
+    tree.heading("Cilindros", text="Cilindros")
+    tree.heading("Año", text="Año")
+    tree.heading("Precio", text="Precio")
 
-    columnas = ("ID", "Estado", "Marca", "Cilindros", "Año", "Precio")
-    tree = ttk.Treeview(ventana, columns=columnas, show="headings")
+    tree.column("ID", width=50)
+    tree.column("Estado", width=100)
+    tree.column("Marca", width=150)
+    tree.column("Cilindros", width=80)
+    tree.column("Año", width=80)
+    tree.column("Precio", width=100)
 
-    for col in columnas:
-        tree.heading(col, text=col)
-        tree.column(col, anchor="center", width=100)
-
-    tree.pack(expand=True, fill="both", padx=20, pady=10)
+    tree.pack(pady=20, fill="both", expand=True)
 
     btn_actualizar = tk.Button(ventana, text="🔄 Recargar", command=lambda: cargar_autos(tree))
-    btn_actualizar.pack(pady=5)
+    btn_actualizar.pack(pady=10)
 
     cargar_autos(tree)
-
-# Si quieres probarlo directamente
-if __name__ == "__main__":
-    root = tk.Tk()
-    root.withdraw()
-    ventana_compras()
-    root.mainloop()
