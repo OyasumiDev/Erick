@@ -1,7 +1,10 @@
 from config.visual.menu_visual import mostrar_menu
 from database.database_mysql import DatabaseMysql
-from database.import_db import import_db
+from import_db import import_db
 from enums.e_autos import E_AUTO
+from models.auto_model import AutoModel
+from helpers.class_singletone import class_singleton
+from config.eliminar_cache import eliminar_pycache  
 
 
 def resetear_base_datos():
@@ -35,6 +38,10 @@ def resetear_base_datos():
 def main():
     """Punto de entrada del sistema de autos."""
     try:
+        # Primero, eliminar el __pycache__
+        print("🧹 Limpiando __pycache__...")
+        eliminar_pycache()
+
         print("🔁 Reiniciando base de datos...")
         resetear_base_datos()
 
