@@ -3,7 +3,6 @@ from database.database_mysql import DatabaseMysql
 from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
 from models.auto_model import AutoModel
-from helpers.class_singletone import class_singleton
 from config.eliminar_cache import eliminar_pycache  
 
 
