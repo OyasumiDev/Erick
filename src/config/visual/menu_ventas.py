@@ -1,5 +1,3 @@
-# config/visual/ventas.py
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 from database.database_mysql import DatabaseMysql
