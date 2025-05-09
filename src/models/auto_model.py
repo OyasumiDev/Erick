@@ -1,7 +1,6 @@
 from enums.e_autos import E_AUTO
 from database.database_mysql import DatabaseMysql
 
-
 class AutoModel:
     def __init__(self):
         self.db = DatabaseMysql()
