@@ -78,16 +78,15 @@ class DatabaseMysql:
             print(f"❌ Error en get_one: {e}")
             return None
 
-    def get_all(self, query: str, params: tuple = (), dictionary: bool = True):
+    def get_all(self, query, params=None):
         try:
-            with self.connection.cursor(dictionary=dictionary) as cursor:
-                cursor.execute(query, params)
-                resultados = cursor.fetchall()
-                print(f"🔍 Se recuperaron {len(resultados)} registros de la base de datos.")
-                return resultados
-        except Error as e:
-            print(f"❌ Error en get_all: {e}")
-            return []
+            with self.connection.cursor(dictionary=True) as cursor:
+                cursor.execute(query, params or ())
+                rows = cursor.fetchall()
+            return {"status": "success", "data": rows}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
 
     def is_autos_empty(self) -> bool:
         try:

@@ -1,88 +1,51 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from database.database_mysql import DatabaseMysql
-from enums.e_autos import E_AUTO
+from models.auto_model import AutoModel
+
+auto_model = AutoModel()
+
+def cargar_autos(tree: ttk.Treeview):
+    resultado = auto_model.get_all()
+    tree.delete(*tree.get_children())
+
+    if resultado["status"] == "success":
+        for auto in resultado["data"]:
+            tree.insert("", "end", values=(
+                auto[0],  # id
+                auto[1],  # estado_auto
+                auto[2],  # marca_auto
+                auto[3],  # num_cilindros
+                auto[4],  # anio
+                f"${auto[5]:,.2f}"  # precio
+            ))
+    else:
+        messagebox.showerror("Error", f"No se pudieron cargar los autos.\n{resultado['message']}")
 
 def ventana_compras():
     ventana = tk.Toplevel()
-    ventana.title("Menú de Compras")
+    ventana.title("📋 Lista de Autos Disponibles")
     ventana.geometry("800x500")
-    ventana.config(bg="#F5F5F5")
 
-    # Centrar ventana
-    ventana.update_idletasks()
-    ancho = ventana.winfo_width()
-    alto = ventana.winfo_height()
-    x = (ventana.winfo_screenwidth() // 2) - (ancho // 2)
-    y = (ventana.winfo_screenheight() // 2) - (alto // 2)
-    ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
+    label = tk.Label(ventana, text="Autos en venta", font=("Helvetica", 18, "bold"))
+    label.pack(pady=10)
 
-    # Tabla de autos
-    tree = ttk.Treeview(ventana, columns=("ID", "Estado", "Marca", "Cilindros", "Año", "Precio"), show="headings")
-    tree.heading("ID", text="ID")
-    tree.heading("Estado", text="Estado")
-    tree.heading("Marca", text="Marca")
-    tree.heading("Cilindros", text="Cilindros")
-    tree.heading("Año", text="Año")
-    tree.heading("Precio", text="Precio")
+    columnas = ("ID", "Estado", "Marca", "Cilindros", "Año", "Precio")
+    tree = ttk.Treeview(ventana, columns=columnas, show="headings")
 
-    tree.column("ID", width=50)
-    tree.column("Estado", width=100)
-    tree.column("Marca", width=150)
-    tree.column("Cilindros", width=100)
-    tree.column("Año", width=80)
-    tree.column("Precio", width=100)
+    for col in columnas:
+        tree.heading(col, text=col)
+        tree.column(col, anchor="center", width=100)
 
-    tree.pack(pady=20)
+    tree.pack(expand=True, fill="both", padx=20, pady=10)
 
-    # Función para cargar autos
-    def cargar_autos():
-        db = DatabaseMysql()
-        query = f"SELECT * FROM {E_AUTO.TABLE.value} ORDER BY {E_AUTO.ID.value}"
-        resultado = db.get_all(query)
+    btn_actualizar = tk.Button(ventana, text="🔄 Recargar", command=lambda: cargar_autos(tree))
+    btn_actualizar.pack(pady=5)
 
+    cargar_autos(tree)
 
-        if resultado["status"] == "success":
-            autos = resultado["data"]
-            if not autos:
-                messagebox.showinfo("Info", "No hay autos registrados.")
-                return
-
-            tree.delete(*tree.get_children())  # Limpiar antes de agregar
-            for auto in autos:
-                tree.insert("", "end", values=(
-                    auto[E_AUTO.ID.value],
-                    auto[E_AUTO.ESTADO.value],
-                    auto[E_AUTO.MARCA.value],
-                    auto[E_AUTO.CILINDROS.value],
-                    auto[E_AUTO.ANIO.value],
-                    f"${auto[E_AUTO.PRECIO.value]:,.2f}"
-                ))
-        else:
-            print("❌ Error al cargar autos:", resultado["message"])
-            messagebox.showerror("Error", f"No se pudieron cargar los autos:\n{resultado['message']}")
-
-    # Entrada para comprar
-    entrada_id = ttk.Entry(ventana)
-    entrada_id.pack(pady=10)
-    entrada_id.insert(0, "ID del auto a comprar")
-
-    def comprar_auto():
-        id_auto = entrada_id.get().strip()
-        if not id_auto.isdigit():
-            messagebox.showwarning("Entrada inválida", "Por favor ingresa un ID válido.")
-            return
-
-        db = DatabaseMysql()
-        delete_query = f"DELETE FROM {E_AUTO.TABLE.value} WHERE {E_AUTO.ID.value} = %s"
-        result = db.execute_query(delete_query, (id_auto,))
-        if result["status"] == "success" and result["rowcount"] > 0:
-            messagebox.showinfo("Compra exitosa", f"Auto con ID {id_auto} comprado.")
-            cargar_autos()
-        else:
-            messagebox.showerror("Error", f"No se encontró un auto con ID {id_auto}.")
-
-    ttk.Button(ventana, text="Comprar Auto", command=comprar_auto).pack(pady=5)
-
-    # Cargar datos al iniciar
-    cargar_autos()
+# Si quieres probarlo directamente
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.withdraw()
+    ventana_compras()
+    root.mainloop()
