@@ -4,6 +4,7 @@ from config.visual.menu_ventas import ventana_ventas
 from config.visual.menu_compras import ventana_compras
 from database.database_mysql import DatabaseMysql
 from database.import_db import import_db
+from database.export_db import exportar_autos_csv
 from enums.e_autos import E_AUTO
 import csv
 import os
@@ -11,11 +12,9 @@ import os
 def resetear_base_datos():
     db = DatabaseMysql()
 
-    # Eliminar tabla si existe
     drop_query = f"DROP TABLE IF EXISTS {E_AUTO.TABLE.value}"
     db.execute_query(drop_query)
 
-    # Crear tabla autos
     create_query = f"""
     CREATE TABLE {E_AUTO.TABLE.value} (
         {E_AUTO.ID.value} INT AUTO_INCREMENT PRIMARY KEY,
@@ -30,10 +29,15 @@ def resetear_base_datos():
 
 def cargar_datos_csv():
     db = DatabaseMysql()
-    ruta_csv = "data/autos_default.csv"
+
+    # Asegura que la carpeta 'data' exista
+    carpeta_data = os.path.join(os.path.dirname(__file__), "data")
+    os.makedirs(carpeta_data, exist_ok=True)
+
+    ruta_csv = os.path.join(carpeta_data, "autos_default.csv")
 
     if not os.path.exists(ruta_csv):
-        print("❌ El archivo autos_default.csv no se encuentra.")
+        print("❌ El archivo autos_default.csv no se encuentra en la carpeta 'data'.")
         return
 
     with open(ruta_csv, newline='', encoding='utf-8') as archivo:
@@ -64,7 +68,7 @@ def main():
     try:
         resetear_base_datos()
         cargar_datos_csv()
-        mostrar_menu()  # Llamar al menú después de cargar la base de datos
+        mostrar_menu()
     except Exception as e:
         print(f"❌ Error general en el programa: {e}")
 
