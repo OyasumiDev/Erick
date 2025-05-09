@@ -17,6 +17,7 @@ class DatabaseMysql:
         self._verificar_y_crear_base_datos()
         self._connect()
 
+        
     def _verificar_y_crear_base_datos(self) -> bool:
         """Verifica si existe la base de datos y la crea si no existe."""
         try:
@@ -90,7 +91,9 @@ class DatabaseMysql:
         try:
             with self.connection.cursor(dictionary=dictionary) as cursor:
                 cursor.execute(query, params)
-                return cursor.fetchall()
+                resultados = cursor.fetchall()
+                print(f"🔍 Se recuperaron {len(resultados)} registros de la base de datos.")
+                return resultados
         except Error as e:
             print(f"❌ Error en get_all: {e}")
             return []
@@ -105,3 +108,15 @@ class DatabaseMysql:
             print(f"❌ Error verificando tabla autos: {e}")
             return True
 
+    def execute_query(self, query, params=None):
+        if not self.connection:
+            self._connect()  # Llama al método _connect() en lugar de 'connect()'
+
+        try:
+            # Crea un cursor dentro del método
+            with self.connection.cursor() as cursor:
+                cursor.execute(query, params)
+                self.connection.commit()
+            return {"status": "success", "message": "Consulta ejecutada correctamente"}
+        except mysql.connector.Error as e:
+            return {"status": "error", "message": str(e)}

@@ -1,34 +1,57 @@
-
 import tkinter as tk
 from tkinter import messagebox
+import csv
 
-def menu():
-    def abrir_compras():
-        # Importa menu_compras aquí, de forma local, para evitar la importación circular
-        from config.visual.menu_compras import menu_compras
-        ventana.destroy()
-        menu_compras()
+def guardar_en_csv(datos, nombre_archivo):
+    with open(nombre_archivo, mode='a', newline='', encoding='utf-8') as archivo:
+        escritor = csv.writer(archivo)
+        escritor.writerow(datos)
 
-    def abrir_ventas():
-        ventana.destroy()
-        menu_ventas()
+def centrar_ventana(ventana, ancho, alto):
+    pantalla_ancho = ventana.winfo_screenwidth()
+    pantalla_alto = ventana.winfo_screenheight()
+    x = (pantalla_ancho // 2) - (ancho // 2)
+    y = (pantalla_alto // 2) - (alto // 2)
+    ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
 
-    def abrir_proveedores():
-        messagebox.showinfo("Proveedores", "Aquí va el módulo de Proveedores")
+def abrir_compras():
+    ventana = tk.Toplevel()
+    ventana.title("Compras")
+    centrar_ventana(ventana, 600, 400)
+    ventana.configure(bg="#e6e6e6")
+    tk.Label(ventana, text="📥 Módulo de Compras", font=("Arial", 16), bg="#e6e6e6").pack(pady=30)
 
-    def salir():
-        ventana.destroy()
+def abrir_ventas():
+    ventana = tk.Toplevel()
+    ventana.title("Ventas")
+    centrar_ventana(ventana, 600, 400)
+    ventana.configure(bg="#e6e6e6")
+    tk.Label(ventana, text="📤 Módulo de Ventas", font=("Arial", 16), bg="#e6e6e6").pack(pady=30)
 
-    ventana = tk.Tk()
-    ventana.title("Menú Principal")
-    ventana.geometry("1200x800")
-    ventana.resizable(False, False)
+def salir():
+    if messagebox.askokcancel("Salir", "¿Deseas salir del sistema?"):
+        ventana_principal.destroy()
 
-    tk.Label(ventana, text="Menú Principal", font=("Arial", 32)).pack(pady=50)
+def mostrar_menu():
+    global ventana_principal
+    ventana_principal = tk.Tk()
+    ventana_principal.title("Sistema de Autos")
+    centrar_ventana(ventana_principal, 1280, 720)
+    ventana_principal.configure(bg="#e6e6e6")
 
-    tk.Button(ventana, text="Compras", width=40, height=2, font=("Arial", 16), command=abrir_compras).pack(pady=15)
-    tk.Button(ventana, text="Ventas", width=40, height=2, font=("Arial", 16), command=abrir_ventas).pack(pady=15)
-    tk.Button(ventana, text="Proveedores", width=40, height=2, font=("Arial", 16), command=abrir_proveedores).pack(pady=15)
-    tk.Button(ventana, text="Salir", width=40, height=2, font=("Arial", 16), command=salir).pack(pady=50)
+    tk.Label(ventana_principal, text="🚗 Menú Principal", font=("Arial", 28), bg="#e6e6e6").pack(pady=40)
 
-    ventana.mainloop()
+    frame_botones = tk.Frame(ventana_principal, bg="#e6e6e6")
+    frame_botones.pack(pady=50)
+
+    botones = [
+        ("📥 Compras", abrir_compras),
+        ("📤 Ventas", abrir_ventas),
+        ("❌ Salir", salir),
+    ]
+
+    for texto, comando in botones:
+        tk.Button(frame_botones, text=texto, width=30, height=2, font=("Arial", 14),
+                  command=comando).pack(pady=20)
+
+    ventana_principal.mainloop()

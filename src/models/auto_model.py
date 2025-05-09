@@ -22,7 +22,9 @@ class AutoModel:
                     {E_AUTO.ID.value} INT AUTO_INCREMENT PRIMARY KEY,
                     {E_AUTO.ESTADO_AUTO.value} ENUM('NUEVO', 'USADOS') NOT NULL,
                     {E_AUTO.MARCA_AUTO.value} VARCHAR(100) NOT NULL,
-                    {E_AUTO.NUM_CILINDROS.value} TINYINT UNSIGNED NOT NULL
+                    {E_AUTO.NUM_CILINDROS.value} TINYINT UNSIGNED NOT NULL,
+                    {E_AUTO.ANIO.value} YEAR NOT NULL,
+                    {E_AUTO.PRECIO.value} DECIMAL(10, 2) NOT NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """
             self.db.run_query(create_query)
@@ -30,21 +32,17 @@ class AutoModel:
         else:
             print(f"✔️ La tabla {E_AUTO.TABLE.value} ya existe.")
 
-
-    def add(self, estado_auto: str, marca: str, cilindros: int) -> dict:
-        """Agrega un nuevo auto a la base de datos."""
+    def add(self, estado: str, marca: str, cilindros: int, anio: int, precio: float) -> dict:
         query = f"""
-            INSERT INTO {E_AUTO.TABLE.value} (
-                {E_AUTO.ESTADO_AUTO.value},
-                {E_AUTO.MARCA_AUTO.value},
-                {E_AUTO.NUM_CILINDROS.value}
-            ) VALUES (%s, %s, %s)
+        INSERT INTO {E_AUTO.TABLE.value} 
+        ({E_AUTO.ESTADO_AUTO.value}, {E_AUTO.MARCA_AUTO.value}, {E_AUTO.NUM_CILINDROS.value}, {E_AUTO.ANIO.value}, {E_AUTO.PRECIO.value}) 
+        VALUES (%s, %s, %s, %s, %s)
         """
         try:
-            self.db.run_query(query, (estado_auto, marca, cilindros))
+            self.db.execute_query(query, (estado, marca, cilindros, anio, precio))
             return {"status": "success", "message": "Auto agregado correctamente"}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al agregar auto: {ex}"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
     def get_all(self) -> dict:
         """Obtiene todos los autos registrados."""
