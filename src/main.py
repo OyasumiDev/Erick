@@ -1,5 +1,7 @@
 import mysql.connector
 from config.visual.menu_visual import mostrar_menu
+from config.visual.menu_ventas import ventana_ventas
+from config.visual.menu_compras import ventana_compras
 from database.database_mysql import DatabaseMysql
 from enums.e_autos import E_AUTO
 import csv

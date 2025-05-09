@@ -1,57 +1,38 @@
 import tkinter as tk
-from tkinter import messagebox
-import csv
-
-def guardar_en_csv(datos, nombre_archivo):
-    with open(nombre_archivo, mode='a', newline='', encoding='utf-8') as archivo:
-        escritor = csv.writer(archivo)
-        escritor.writerow(datos)
-
-def centrar_ventana(ventana, ancho, alto):
-    pantalla_ancho = ventana.winfo_screenwidth()
-    pantalla_alto = ventana.winfo_screenheight()
-    x = (pantalla_ancho // 2) - (ancho // 2)
-    y = (pantalla_alto // 2) - (alto // 2)
-    ventana.geometry(f"{ancho}x{alto}+{x}+{y}")
-
-def abrir_compras():
-    ventana = tk.Toplevel()
-    ventana.title("Compras")
-    centrar_ventana(ventana, 600, 400)
-    ventana.configure(bg="#e6e6e6")
-    tk.Label(ventana, text="📥 Módulo de Compras", font=("Arial", 16), bg="#e6e6e6").pack(pady=30)
-
-def abrir_ventas():
-    ventana = tk.Toplevel()
-    ventana.title("Ventas")
-    centrar_ventana(ventana, 600, 400)
-    ventana.configure(bg="#e6e6e6")
-    tk.Label(ventana, text="📤 Módulo de Ventas", font=("Arial", 16), bg="#e6e6e6").pack(pady=30)
-
-def salir():
-    if messagebox.askokcancel("Salir", "¿Deseas salir del sistema?"):
-        ventana_principal.destroy()
+from tkinter import ttk
+from menu_compras import ventana_compras  
+from menu_ventas import ventana_ventas  
 
 def mostrar_menu():
-    global ventana_principal
-    ventana_principal = tk.Tk()
-    ventana_principal.title("Sistema de Autos")
-    centrar_ventana(ventana_principal, 1280, 720)
-    ventana_principal.configure(bg="#e6e6e6")
+    ventana_menu = tk.Tk()
+    ventana_menu.title("Menú Principal")
+    ventana_menu.geometry("1280x720")
+    ventana_menu.config(bg="#D3D3D3")
 
-    tk.Label(ventana_principal, text="🚗 Menú Principal", font=("Arial", 28), bg="#e6e6e6").pack(pady=40)
+    # Centrar la ventana
+    screen_width = ventana_menu.winfo_screenwidth()
+    screen_height = ventana_menu.winfo_screenheight()
+    window_width = 1280
+    window_height = 720
+    position_top = int(screen_height / 2 - window_height / 2)
+    position_right = int(screen_width / 2 - window_width / 2)
+    ventana_menu.geometry(f'{window_width}x{window_height}+{position_right}+{position_top}')
 
-    frame_botones = tk.Frame(ventana_principal, bg="#e6e6e6")
-    frame_botones.pack(pady=50)
+    # Frame principal
+    frame_menu = ttk.Frame(ventana_menu, padding="30", relief="solid", borderwidth=2)
+    frame_menu.place(relx=0.5, rely=0.5, anchor="center")
 
-    botones = [
-        ("📥 Compras", abrir_compras),
-        ("📤 Ventas", abrir_ventas),
-        ("❌ Salir", salir),
-    ]
+    # Título
+    title_label = ttk.Label(frame_menu, text="Menú Principal", font=("Arial", 24, "bold"))
+    title_label.grid(row=0, column=0, columnspan=2, pady=20)
 
-    for texto, comando in botones:
-        tk.Button(frame_botones, text=texto, width=30, height=2, font=("Arial", 14),
-                  command=comando).pack(pady=20)
+    # Botón para abrir el menú de compras
+    ttk.Button(frame_menu, text="Menú de Compras", width=20, command=ventana_compras).grid(row=1, column=0, padx=10, pady=10)
+    
+    # Botón para abrir el menú de ventas
+    ttk.Button(frame_menu, text="Menú de Ventas", width=20, command=ventana_ventas).grid(row=2, column=0, padx=10, pady=10)
+    
+    # Botón para salir
+    ttk.Button(frame_menu, text="Salir", width=20, command=ventana_menu.destroy).grid(row=3, column=0, columnspan=2, pady=10)
 
-    ventana_principal.mainloop()
+    ventana_menu.mainloop()
