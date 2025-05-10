@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from config.visual.menu_compras import ventana_compras  # Solo importamos el menú de compras
+from config.visual import menu_compras
+
 
 def mostrar_menu():
     # Importación dinámica para evitar la importación circular

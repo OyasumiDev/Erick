@@ -1,14 +1,15 @@
 import sys
 import os
+
+# Aseguramos que Python pueda encontrar el directorio 'src' al agregarlo al sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+
 import importlib
 from database.database_mysql import DatabaseMysql
 from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
 from config.eliminar_cache import eliminar_pycache
-from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
-
-# Agregar el directorio principal (Erick/) al sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config import 
 
 def resetear_base_datos():
     """Elimina la tabla de autos y la recrea desde cero usando los enums."""
@@ -37,6 +38,7 @@ def resetear_base_datos():
     finally:
         db.close()
 
+
 def main():
     """Punto de entrada del sistema de autos."""
     try:
@@ -51,12 +53,19 @@ def main():
         db_importador.import_db()
 
         print("🚗 Iniciando menú visual...")
-        # Importación diferida para evitar la importación circular
-        menu_visual = importlib.import_module('config.visual.menu_visual')
-        menu_visual.mostrar_menu()
 
-    except Exception as e:
-        print(f"❌ Error general en el programa: {e}")
+        try:
+            menu_visual = importlib.import_module('config.visual.menu_visual')
+            menu_visual.mostrar_menu()
+        except ModuleNotFoundError as e:
+            print(f"❌ No se pudo importar 'menu_visual': {e}")
+        except AttributeError:
+            print("❌ El módulo 'menu_visual' no tiene la función 'mostrar_menu'.")
+        except Exception as e:
+            print(f"❌ Error inesperado al iniciar el menú visual: {e}")
+
+        except Exception as e:
+            print(f"❌ Error general en el programa: {e}")
 
 if __name__ == "__main__":
     main()
