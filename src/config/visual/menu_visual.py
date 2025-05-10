@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from config.visual.menu_compras import ventana_compras  # Asegúrate de importar correctamente
-from config.visual.menu_ventas import ventana_ventas  # Importamos la ventana de ventas
+from config.visual.menu_compras import ventana_compras  
+from config.visual.menu_ventas import SistemaVentaAutos  
 
 def mostrar_menu():
     """Función para mostrar el menú principal."""

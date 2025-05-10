@@ -33,12 +33,13 @@ class AutoModel:
         try:
             result = self.db.get_all(query)
             if result["status"] == "success":
-                return result
+                return result["data"]  # Retorna solo los datos, no el status
             else:
                 raise Exception(result["message"])
         except Exception as e:
             print(f"Error al obtener datos: {e}")
             return {"status": "error", "message": str(e)}
+
 
     def add(self, marca, anio, estado, cilindros, precio):
         """Agrega un nuevo auto a la base de datos."""

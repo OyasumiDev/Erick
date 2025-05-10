@@ -4,13 +4,15 @@ import os
 # Aseguramos que Python pueda encontrar el directorio 'src'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
+# Importamos las librerías necesarias
 import importlib
 from database.database_mysql import DatabaseMysql
 from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
 from config.eliminar_cache import eliminar_pycache
-from config.config import *
+from config.visual.menu_visual import mostrar_menu
 
+# Definimos la función para eliminar el __pycache__
 def resetear_base_datos():
     """Elimina la tabla de autos y la recrea desde cero usando los enums."""
     db = DatabaseMysql()
@@ -38,6 +40,7 @@ def resetear_base_datos():
     finally:
         db.close()
 
+# Definimos la función principal
 def main():
     """Punto de entrada del sistema de autos."""
     try:
@@ -67,5 +70,6 @@ def main():
     except Exception as e:
         print(f"❌ Error general en el programa: {e}")
 
+#SI EL SCRIPT SE EJECUTA DIRECTAMENTE, LLAMA A LA FUNCIÓN PRINCIPAL
 if __name__ == "__main__":
     main()
