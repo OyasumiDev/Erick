@@ -1,3 +1,5 @@
+# src/database/database_mysql.py
+
 import mysql.connector
 from mysql.connector import pooling, Error
 from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
@@ -42,22 +44,34 @@ class DatabaseMysql:
             print("❌ Pool de conexiones no inicializado")
             return None
 
-    def close(self):
-        """Cierra todas las conexiones del pool."""
-        pass  # Ya no es necesario cerrar el pool explícitamente
+    def execute_query(self, query, params=None):
+        """Ejecuta una consulta SQL (INSERT, UPDATE, DELETE, etc.)."""
+        conn = self._get_connection()
+        if conn:
+            try:
+                with conn.cursor(buffered=True) as cursor:
+                    cursor.execute(query, params or ())
+                    conn.commit()
+                return {"status": "success", "message": "Consulta ejecutada correctamente"}
+            except Error as e:
+                return {"status": "error", "message": str(e)}
+            finally:
+                conn.close()
+        return {"status": "error", "message": "No se pudo obtener la conexión"}
 
-def run_query(self, query, params=None):
-    conn = self.pool.get_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute(query, params)
-        if query.strip().upper().startswith("SELECT"):
-            return cursor.fetchall()
-        conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
-
+    def run_query(self, query, params=None):
+        """Ejecuta una consulta SELECT y retorna resultados crudos."""
+        conn = self._get_connection()
+        if conn:
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute(query, params or ())
+                    return cursor.fetchall()
+            except Error as e:
+                print(f"❌ Error en run_query: {e}")
+            finally:
+                conn.close()
+        return []
 
     def get_one(self, query: str, params: tuple = (), dictionary: bool = True):
         """Obtiene un único registro de la base de datos."""
@@ -99,16 +113,6 @@ def run_query(self, query, params=None):
             print(f"❌ Error verificando tabla autos: {e}")
             return True
 
-    def execute_query(self, query, params=None):
-        """Ejecuta una consulta SQL y maneja errores."""
-        conn = self._get_connection()
-        if conn:
-            try:
-                with conn.cursor(buffered=True) as cursor:
-                    cursor.execute(query, params)
-                    conn.commit()
-                return {"status": "success", "message": "Consulta ejecutada correctamente"}
-            except Error as e:
-                return {"status": "error", "message": str(e)}
-            finally:
-                conn.close()
+    def close(self):
+        """Cierra todas las conexiones del pool (no es necesario usarlo en MySQLConnector)."""
+        pass

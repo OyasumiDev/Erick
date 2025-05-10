@@ -1,5 +1,6 @@
 from database.database_mysql import DatabaseMysql
 from enums.e_autos import E_AUTO
+from config.visual.menu_visual import MenuVisual
 
 class AutoModel:
     """Clase que maneja las operaciones relacionadas con autos."""

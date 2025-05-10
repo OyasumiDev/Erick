@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from config.eliminar_cache import eliminar_pycache
 
+
 # Cargar el entorno
 load_dotenv()
 

@@ -1,10 +1,15 @@
-# src/main.py
-
+import sys
+import os
 import importlib
 from database.database_mysql import DatabaseMysql
 from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
 from config.eliminar_cache import eliminar_pycache
+from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
+
+
+# Agregar el directorio principal (Erick/) al sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 def resetear_base_datos():
     """Elimina la tabla de autos y la recrea desde cero usando los enums."""
