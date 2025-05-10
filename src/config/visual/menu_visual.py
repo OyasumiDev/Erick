@@ -1,7 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-from config.visual.menu_compras import ventana_compras
-from config.visual.menu_ventas import ventana_ventas
 
 def mostrar_menu():
     ventana_menu = tk.Tk()
@@ -35,8 +33,9 @@ def mostrar_menu():
     title_label.grid(row=0, column=0, pady=(0, 30))
 
     # Botones (centrados y grandes)
-    ttk.Button(frame_menu, text="Menú de Compras", style="My.TButton", width=25, command=ventana_compras).grid(row=1, column=0, pady=10)
-    ttk.Button(frame_menu, text="Menú de Ventas", style="My.TButton", width=25, command=ventana_ventas).grid(row=2, column=0, pady=10)
+    # Estos botones ahora están vacíos, puedes agregar los eventos que desees
+    ttk.Button(frame_menu, text="Opción 1", style="My.TButton", width=25, command=lambda: print("Opción 1 seleccionada")).grid(row=1, column=0, pady=10)
+    ttk.Button(frame_menu, text="Opción 2", style="My.TButton", width=25, command=lambda: print("Opción 2 seleccionada")).grid(row=2, column=0, pady=10)
     ttk.Button(frame_menu, text="Salir", style="My.TButton", width=25, command=ventana_menu.destroy).grid(row=3, column=0, pady=(30, 0))
 
     ventana_menu.mainloop()

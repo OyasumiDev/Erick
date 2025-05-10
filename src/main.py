@@ -52,9 +52,9 @@ def main():
         db_importador.import_db()
 
         print("🚗 Iniciando menú visual...")
-        # Importación dinámica para evitar la importación circular
+        # Importación diferida para evitar la importación circular
         menu_visual = importlib.import_module('config.visual.menu_visual')
-        menu_visual.mostrar_menu()  # Asegúrate de acceder correctamente a la clase y su método
+        menu_visual.mostrar_menu()
 
     except Exception as e:
         print(f"❌ Error general en el programa: {e}")
