@@ -54,7 +54,7 @@ def main():
         print("🚗 Iniciando menú visual...")
         # Importación dinámica para evitar la importación circular
         menu_visual = importlib.import_module('config.visual.menu_visual')
-        menu_visual.mostrar_menu()
+        menu_visual.mostrar_menu()  # Asegúrate de acceder correctamente a la clase y su método
 
     except Exception as e:
         print(f"❌ Error general en el programa: {e}")
