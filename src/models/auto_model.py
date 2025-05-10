@@ -1,58 +1,59 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 
-def cargar_autos(tree):
-    tree.delete(*tree.get_children())  # Limpia la tabla
 
-    modelo = AutoModel()
-    resultado = modelo.get_compras()
+def cargar_autos(tree: ttk.Treeview):
+    """Carga los autos disponibles en la tabla visual."""
+    try:
+        tree.delete(*tree.get_children())  # Limpia la tabla
 
-    if resultado["status"] != "success":
-        print(f"❌ Error al obtener autos: {resultado['message']}")
-        return
+        modelo = AutoModel()
+        resultado = modelo.get_compras()
 
-    for auto in resultado["data"]:
-        try:
-            print(f"📦 Auto leído: {auto}")
+        if resultado["status"] != "success":
+            messagebox.showerror("Error", f"No se pudieron cargar los autos: {resultado['message']}")
+            return
 
+        for auto in resultado["data"]:
             if not isinstance(auto, dict):
                 print(f"⚠️ Auto inválido (esperado dict): {auto}")
                 continue
 
             tree.insert("", "end", values=(
-                auto["id_auto"],
-                auto["estado"],
-                auto["marca"],
-                auto["cilindros"],
-                auto["anio"],
-                f"${float(auto['precio']):,.2f}"
+                auto.get("id_auto"),
+                auto.get("estado"),
+                auto.get("marca"),
+                auto.get("cilindros"),
+                auto.get("anio"),
+                f"${float(auto.get('precio', 0)) :,.2f}"
             ))
-        except Exception as e:
-            print(f"❌ Error al cargar auto: {e}")
+
+    except Exception as e:
+        messagebox.showerror("Error crítico", f"❌ Error al cargar autos: {e}")
 
 def ventana_compras():
+    """Crea la ventana de compras con tabla de autos y botón para recargar."""
     ventana = tk.Toplevel()
     ventana.title("🛒 Módulo de Compras")
     ventana.geometry("1000x500")
 
-    tree = ttk.Treeview(ventana, columns=("ID", "Estado", "Marca", "Cilindros", "Año", "Precio"), show="headings")
-    tree.heading("ID", text="ID")
-    tree.heading("Estado", text="Estado")
-    tree.heading("Marca", text="Marca")
-    tree.heading("Cilindros", text="Cilindros")
-    tree.heading("Año", text="Año")
-    tree.heading("Precio", text="Precio")
+    # Tabla de autos
+    columnas = ("ID", "Estado", "Marca", "Cilindros", "Año", "Precio")
+    tree = ttk.Treeview(ventana, columns=columnas, show="headings")
 
-    tree.column("ID", width=50)
-    tree.column("Estado", width=100)
-    tree.column("Marca", width=150)
-    tree.column("Cilindros", width=80)
-    tree.column("Año", width=80)
-    tree.column("Precio", width=100)
+    for col in columnas:
+        tree.heading(col, text=col)
+        ancho = 100 if col not in ("ID", "Marca", "Precio") else (50 if col == "ID" else 150)
+        tree.column(col, width=ancho, anchor="center")
 
     tree.pack(pady=20, fill="both", expand=True)
 
-    btn_actualizar = tk.Button(ventana, text="🔄 Recargar", command=lambda: cargar_autos(tree))
-    btn_actualizar.pack(pady=10)
+    # Botón de recarga
+    frame_botones = tk.Frame(ventana)
+    frame_botones.pack(pady=10)
 
+    btn_actualizar = tk.Button(frame_botones, text="🔄 Recargar autos", command=lambda: cargar_autos(tree))
+    btn_actualizar.pack()
+
+    # Carga inicial de autos
     cargar_autos(tree)
