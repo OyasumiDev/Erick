@@ -1,7 +1,6 @@
 from database.database_mysql import DatabaseMysql  # Asegúrate de importar la clase de conexión MySQL
-from models.auto_model import AutoModel
 import os
-from enums.e_autos import E_AUTO
+from models.auto_model import AutoModel  # Asegúrate de importar la clase AutoModel
 class DatabaseImport:
     def __init__(self):
         self.auto_model = AutoModel()

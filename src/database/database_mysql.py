@@ -46,18 +46,18 @@ class DatabaseMysql:
         """Cierra todas las conexiones del pool."""
         pass  # Ya no es necesario cerrar el pool explícitamente
 
-    def run_query(self, query: str, params: tuple = ()) -> None:
-        """Ejecuta una consulta SQL utilizando el pool de conexiones."""
-        conn = self._get_connection()
-        if conn:
-            try:
-                with conn.cursor(buffered=True) as cursor:
-                    cursor.execute(query, params)
-                conn.commit()
-            except Error as e:
-                print(f"❌ Error ejecutando query: {e}")
-            finally:
-                conn.close()
+def run_query(self, query, params=None):
+    conn = self.pool.get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        if query.strip().upper().startswith("SELECT"):
+            return cursor.fetchall()
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
 
     def get_one(self, query: str, params: tuple = (), dictionary: bool = True):
         """Obtiene un único registro de la base de datos."""
@@ -83,9 +83,11 @@ class DatabaseMysql:
                     rows = cursor.fetchall()
                 return {"status": "success", "data": rows}
             except Exception as e:
-                return {"status": "error", "message": str(e)}
+                return {"status": "error", "message": str(e), "data": []}
             finally:
                 conn.close()
+        else:
+            return {"status": "error", "message": "No se pudo obtener la conexión", "data": []}
 
     def is_autos_empty(self) -> bool:
         """Verifica si la tabla de autos está vacía."""

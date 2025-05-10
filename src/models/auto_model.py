@@ -47,7 +47,7 @@ class AutoModel:
                 VALUES (%s, %s, %s, %s, %s)
             """
             params = (marca, anio, estado, cilindros, precio)
-            result = self.db.run_query(query, params)
+            result = self.db.execute_query(query, params)  # ✅ Cambio aquí
 
             if result["status"] == "success":
                 return {"status": "success", "message": f"Auto {marca} {anio} agregado correctamente"}
