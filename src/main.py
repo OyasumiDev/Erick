@@ -2,7 +2,6 @@ from config.visual.menu_visual import mostrar_menu
 from database.database_mysql import DatabaseMysql
 from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
-from models.auto_model import AutoModel
 from config.eliminar_cache import eliminar_pycache  
 
 

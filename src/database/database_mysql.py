@@ -44,9 +44,7 @@ class DatabaseMysql:
 
     def close(self):
         """Cierra todas las conexiones del pool."""
-        if self.pool:
-            self.pool.close()
-            print("🔒 Pool de conexiones cerrado correctamente.")
+        # Se ha eliminado la línea self.pool.close()
 
     def run_query(self, query: str, params: tuple = ()) -> None:
         """Ejecuta una consulta SQL utilizando el pool de conexiones."""

@@ -1,92 +1,58 @@
-from enums.e_autos import E_AUTO
-from database.database_mysql import DatabaseMysql
+import tkinter as tk
+from tkinter import ttk
 
-class AutoModel:
-    def __init__(self):
-        self.db = DatabaseMysql()
-        self._ensure_table()
+def cargar_autos(tree):
+    tree.delete(*tree.get_children())  # Limpia la tabla
 
-    def _ensure_table(self) -> None:
+    modelo = AutoModel()
+    resultado = modelo.get_compras()
+
+    if resultado["status"] != "success":
+        print(f"❌ Error al obtener autos: {resultado['message']}")
+        return
+
+    for auto in resultado["data"]:
         try:
-            query = """
-                SELECT COUNT(*) AS c
-                FROM information_schema.tables
-                WHERE table_schema = %s AND table_name = %s
-            """
-            result = self.db.get_one(query, (self.db.database, E_AUTO.TABLE.value))
-            if result and result.get("c", 0) == 0:
-                print(f"⚠️ La tabla {E_AUTO.TABLE.value} no existe. Creando...")
-                create_query = f"""
-                    CREATE TABLE IF NOT EXISTS {E_AUTO.TABLE.value} (
-                        {E_AUTO.ID.value} INT AUTO_INCREMENT PRIMARY KEY,
-                        {E_AUTO.ESTADO_AUTO.value} ENUM('NUEVO', 'USADOS') NOT NULL,
-                        {E_AUTO.MARCA_AUTO.value} VARCHAR(100) NOT NULL,
-                        {E_AUTO.NUM_CILINDROS.value} TINYINT UNSIGNED NOT NULL,
-                        {E_AUTO.ANIO.value} YEAR NOT NULL,
-                        {E_AUTO.PRECIO.value} DECIMAL(10, 2) NOT NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-                """
-                self.db.run_query(create_query)
-                print(f"✅ Tabla {E_AUTO.TABLE.value} creada correctamente.")
-            else:
-                print(f"✔️ La tabla {E_AUTO.TABLE.value} ya existe.")
+            print(f"📦 Auto leído: {auto}")
+
+            if not isinstance(auto, dict):
+                print(f"⚠️ Auto inválido (esperado dict): {auto}")
+                continue
+
+            tree.insert("", "end", values=(
+                auto["id_auto"],
+                auto["estado"],
+                auto["marca"],
+                auto["cilindros"],
+                auto["anio"],
+                f"${float(auto['precio']):,.2f}"
+            ))
         except Exception as e:
-            print(f"❌ Error al verificar o crear tabla: {e}")
+            print(f"❌ Error al cargar auto: {e}")
 
-    def add(self, estado: str, marca: str, cilindros: int, anio: int, precio: float) -> dict:
-        if estado not in ("NUEVO", "USADOS"):
-            return {"status": "error", "message": "Estado inválido. Debe ser 'NUEVO' o 'USADOS'"}
-        if cilindros <= 0:
-            return {"status": "error", "message": "El número de cilindros debe ser mayor a 0"}
-        if precio <= 0:
-            return {"status": "error", "message": "El precio debe ser mayor a 0"}
+def ventana_compras():
+    ventana = tk.Toplevel()
+    ventana.title("🛒 Módulo de Compras")
+    ventana.geometry("1000x500")
 
-        query = f"""
-        INSERT INTO {E_AUTO.TABLE.value} 
-        ({E_AUTO.ESTADO_AUTO.value}, {E_AUTO.MARCA_AUTO.value}, {E_AUTO.NUM_CILINDROS.value}, {E_AUTO.ANIO.value}, {E_AUTO.PRECIO.value}) 
-        VALUES (%s, %s, %s, %s, %s)
-        """
-        try:
-            self.db.execute_query(query, (estado, marca, cilindros, anio, precio))
-            return {"status": "success", "message": "Auto agregado correctamente"}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+    tree = ttk.Treeview(ventana, columns=("ID", "Estado", "Marca", "Cilindros", "Año", "Precio"), show="headings")
+    tree.heading("ID", text="ID")
+    tree.heading("Estado", text="Estado")
+    tree.heading("Marca", text="Marca")
+    tree.heading("Cilindros", text="Cilindros")
+    tree.heading("Año", text="Año")
+    tree.heading("Precio", text="Precio")
 
-    def get_all(self) -> dict:
-        query = f"SELECT * FROM {E_AUTO.TABLE.value} ORDER BY {E_AUTO.ID.value} ASC"
-        try:
-            data = self.db.get_all(query)
+    tree.column("ID", width=50)
+    tree.column("Estado", width=100)
+    tree.column("Marca", width=150)
+    tree.column("Cilindros", width=80)
+    tree.column("Año", width=80)
+    tree.column("Precio", width=100)
 
-            columns = [E_AUTO.ID.value, E_AUTO.ESTADO_AUTO.value, E_AUTO.MARCA_AUTO.value, 
-                       E_AUTO.NUM_CILINDROS.value, E_AUTO.ANIO.value, E_AUTO.PRECIO.value]
-            auto_list = []
-            for auto in data:
-                auto_dict = {columns[i]: auto[i] for i in range(len(columns))}
-                auto_list.append(auto_dict)
+    tree.pack(pady=20, fill="both", expand=True)
 
-            return {"status": "success", "data": auto_list}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al obtener autos: {ex}"}
+    btn_actualizar = tk.Button(ventana, text="🔄 Recargar", command=lambda: cargar_autos(tree))
+    btn_actualizar.pack(pady=10)
 
-    def get_by_id(self, auto_id: int) -> dict:
-        query = f"SELECT * FROM {E_AUTO.TABLE.value} WHERE {E_AUTO.ID.value} = %s"
-        try:
-            data = self.db.get_one(query, (auto_id,))
-            return {"status": "success", "data": data}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al obtener auto: {ex}"}
-
-    def get_compras(self) -> dict:
-        return self.get_all()
-
-    def bulk_insert(self, autos: list[tuple]) -> dict:
-        query = f"""
-        INSERT INTO {E_AUTO.TABLE.value} 
-        ({E_AUTO.ESTADO_AUTO.value}, {E_AUTO.MARCA_AUTO.value}, {E_AUTO.NUM_CILINDROS.value}, {E_AUTO.ANIO.value}, {E_AUTO.PRECIO.value}) 
-        VALUES (%s, %s, %s, %s, %s)
-        """
-        try:
-            self.db.executemany_query(query, autos)
-            return {"status": "success", "message": f"{len(autos)} autos insertados correctamente."}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+    cargar_autos(tree)

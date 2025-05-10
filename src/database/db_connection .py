@@ -1,4 +1,4 @@
-from database_mysql import DatabaseMysql  # Asegúrate de que la ruta de importación sea correcta
+from database_mysql import DatabaseMysql  
 from enums.e_autos import E_AUTO
 import os
 
@@ -22,12 +22,11 @@ def insert_data():
     print("Insertando los datos al reiniciar el sistema...")
 
     autos_data = [
-        (1, 'NUEVO', 'NISSAN', 6, 2023, 425000),
-        (2, 'USADOS', 'NISSAN', 4, 2015, 195000),
-        (3, 'NUEVO', 'CHEVROLET', 6, 2024, 478000),
-        (4, 'USADOS', 'VOLKSWAGEN', 4, 2013, 145000),
-        (5, 'USADOS', 'HONDA', 8, 2016, 230000),
-        # Agrega más autos si es necesario
+        (1, 'NUEVO', 'NISSAN', 6, 2023, 425000.00),
+        (2, 'USADOS', 'NISSAN', 4, 2015, 195000.00),
+        (3, 'NUEVO', 'CHEVROLET', 6, 2024, 478000.00),
+        (4, 'USADOS', 'VOLKSWAGEN', 4, 2013, 145000.00),
+        (5, 'USADOS', 'HONDA', 8, 2016, 230000.00),
     ]
 
     db = DatabaseMysql()
@@ -42,5 +41,3 @@ def insert_data():
         mark_data_as_inserted()
     except Exception as e:
         print(f"❌ Error al insertar datos: {e}")
-    finally:
-        db.close()
