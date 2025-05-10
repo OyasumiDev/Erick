@@ -1,7 +1,7 @@
 import sys
 import os
 
-# Aseguramos que Python pueda encontrar el directorio 'src' al agregarlo al sys.path
+# Aseguramos que Python pueda encontrar el directorio 'src'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
 import importlib
@@ -9,7 +9,7 @@ from database.database_mysql import DatabaseMysql
 from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
 from config.eliminar_cache import eliminar_pycache
-from config import 
+from config.config import *
 
 def resetear_base_datos():
     """Elimina la tabla de autos y la recrea desde cero usando los enums."""
@@ -38,7 +38,6 @@ def resetear_base_datos():
     finally:
         db.close()
 
-
 def main():
     """Punto de entrada del sistema de autos."""
     try:
@@ -55,6 +54,7 @@ def main():
         print("🚗 Iniciando menú visual...")
 
         try:
+            # Importamos y mostramos el menú visual principal
             menu_visual = importlib.import_module('config.visual.menu_visual')
             menu_visual.mostrar_menu()
         except ModuleNotFoundError as e:
@@ -64,8 +64,8 @@ def main():
         except Exception as e:
             print(f"❌ Error inesperado al iniciar el menú visual: {e}")
 
-        except Exception as e:
-            print(f"❌ Error general en el programa: {e}")
+    except Exception as e:
+        print(f"❌ Error general en el programa: {e}")
 
 if __name__ == "__main__":
     main()
