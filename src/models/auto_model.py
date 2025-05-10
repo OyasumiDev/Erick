@@ -1,14 +1,11 @@
 from database.database_mysql import DatabaseMysql
 from enums.e_autos import E_AUTO
-from config.visual.menu_visual import mostrar_menu
-from config.eliminar_cache import eliminar_pycache
-
 
 class AutoModel:
     """Clase que maneja las operaciones relacionadas con autos."""
 
     def __init__(self):
-        self.db = DatabaseMysql()  # Asegúrate de que esta clase maneje la conexión correctamente
+        self.db = DatabaseMysql()
 
     def obtener_autos_nuevos(self):
         """Obtiene la lista de autos con estado 'NUEVO' desde la base de datos."""
@@ -31,7 +28,7 @@ class AutoModel:
 
     def get_compras(self):
         """Obtiene todos los autos desde la base de datos."""
-        query = "SELECT * FROM autos"  # Cambia la consulta si es necesario
+        query = f"SELECT * FROM {E_AUTO.TABLE.value}"
         try:
             result = self.db.get_all(query)
             if result["status"] == "success":

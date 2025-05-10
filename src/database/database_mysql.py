@@ -51,7 +51,7 @@ class DatabaseMysql:
         conn = self._get_connection()
         if conn:
             try:
-                with conn.cursor() as cursor:
+                with conn.cursor(buffered=True) as cursor:
                     cursor.execute(query, params)
                 conn.commit()
             except Error as e:
@@ -64,7 +64,7 @@ class DatabaseMysql:
         conn = self._get_connection()
         if conn:
             try:
-                with conn.cursor(dictionary=dictionary) as cursor:
+                with conn.cursor(buffered=True, dictionary=dictionary) as cursor:
                     cursor.execute(query, params)
                     return cursor.fetchone()
             except Error as e:
@@ -78,7 +78,7 @@ class DatabaseMysql:
         conn = self._get_connection()
         if conn:
             try:
-                with conn.cursor(dictionary=True) as cursor:
+                with conn.cursor(buffered=True, dictionary=True) as cursor:
                     cursor.execute(query, params or ())
                     rows = cursor.fetchall()
                 return {"status": "success", "data": rows}
@@ -102,7 +102,7 @@ class DatabaseMysql:
         conn = self._get_connection()
         if conn:
             try:
-                with conn.cursor() as cursor:
+                with conn.cursor(buffered=True) as cursor:
                     cursor.execute(query, params)
                     conn.commit()
                 return {"status": "success", "message": "Consulta ejecutada correctamente"}

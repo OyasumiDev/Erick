@@ -1,9 +1,10 @@
-from config.visual.menu_visual import mostrar_menu
+# src/main.py
+
+import importlib
 from database.database_mysql import DatabaseMysql
 from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
-from config.eliminar_cache import eliminar_pycache  
-
+from config.eliminar_cache import eliminar_pycache
 
 def resetear_base_datos():
     """Elimina la tabla de autos y la recrea desde cero usando los enums."""
@@ -32,7 +33,6 @@ def resetear_base_datos():
     finally:
         db.close()
 
-
 def main():
     """Punto de entrada del sistema de autos."""
     try:
@@ -47,11 +47,12 @@ def main():
         db_importador.import_db()
 
         print("🚗 Iniciando menú visual...")
-        mostrar_menu()
+        # Importación dinámica para evitar la importación circular
+        menu_visual = importlib.import_module('config.visual.menu_visual')
+        menu_visual.mostrar_menu()
 
     except Exception as e:
         print(f"❌ Error general en el programa: {e}")
-
 
 if __name__ == "__main__":
     main()
