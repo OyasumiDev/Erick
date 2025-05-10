@@ -12,6 +12,14 @@ def cargar_autos(tree):
         print(f"❌ Error al obtener autos: {resultado['message']}")
         return
 
+    # Verifica si los autos están en 'data'
+    if "data" not in resultado:
+        print("❌ No se encontró la clave 'data' en la respuesta")
+        return
+
+    # Verifica el contenido de los datos obtenidos
+    print(f"✅ Datos obtenidos: {resultado['data']}")
+
     for auto in resultado["data"]:
         try:
             print(f"📦 Auto leído: {auto}")
@@ -20,6 +28,7 @@ def cargar_autos(tree):
                 print(f"⚠️ Auto inválido (esperado 6 elementos): {auto}")
                 continue
 
+            # Insertar los datos en el Treeview
             tree.insert("", "end", values=(
                 auto[0],  # ID
                 auto[1],  # Estado
@@ -36,6 +45,7 @@ def ventana_compras():
     ventana.title("🛒 Módulo de Compras")
     ventana.geometry("1000x500")
 
+    # Crear el Treeview para mostrar los autos
     tree = ttk.Treeview(ventana, columns=("ID", "Estado", "Marca", "Cilindros", "Año", "Precio"), show="headings")
     tree.heading("ID", text="ID")
     tree.heading("Estado", text="Estado")
@@ -44,6 +54,7 @@ def ventana_compras():
     tree.heading("Año", text="Año")
     tree.heading("Precio", text="Precio")
 
+    # Configurar el ancho de las columnas
     tree.column("ID", width=50)
     tree.column("Estado", width=100)
     tree.column("Marca", width=150)
@@ -53,7 +64,9 @@ def ventana_compras():
 
     tree.pack(pady=20, fill="both", expand=True)
 
+    # Botón para recargar los datos
     btn_actualizar = tk.Button(ventana, text="🔄 Recargar", command=lambda: cargar_autos(tree))
     btn_actualizar.pack(pady=10)
 
+    # Cargar los autos por primera vez
     cargar_autos(tree)
