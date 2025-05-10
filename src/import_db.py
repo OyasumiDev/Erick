@@ -1,3 +1,25 @@
+def crear_tabla_autos():
+    from config.database import get_connection
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS autos (
+                id_auto INT AUTO_INCREMENT PRIMARY KEY,
+                condicion VARCHAR(10),
+                marca VARCHAR(50),
+                num_cilindros INT,
+                modelo INT,
+                precio FLOAT
+            )
+        ''')
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("✅ Tabla 'autos' creada/verificada correctamente.")
+    except Exception as e:
+        print(f"❌ Error al crear la tabla 'autos': {e}")
+
 from models.auto_model import AutoModel
 
 class DatabaseImport:
