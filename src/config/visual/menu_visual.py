@@ -6,6 +6,10 @@ import os
 from config.visual.menu_compras import ventana_compras  
 from config.visual.menu_ventas import SistemaVentaAutos
 
+def abrir_menu_ventas():
+    ventana_ventas = tk.Toplevel()  # Crea una ventana hija
+    SistemaVentaAutos(ventana_ventas)  # Pasa la ventana a la clase
+
 def mostrar_menu():
     ventana_menu = tk.Tk()
     ventana_menu.title("Menú Principal")
@@ -15,7 +19,7 @@ def mostrar_menu():
     # --- Rutas seguras ---
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     img_perfil_path = os.path.join(BASE_DIR, "assets", "root_user.jpeg")
-    img_fondo_path = os.path.join(BASE_DIR, "assets", "fondo_menu.jpg")  # Aquí se corrigió la extensión a .jpg
+    img_fondo_path = os.path.join(BASE_DIR, "assets", "fondo_menu.jpg")
 
     # --- Cargar fondo ---
     try:
@@ -61,7 +65,7 @@ def mostrar_menu():
     title_label.grid(row=0, column=0, pady=(0, 30))
 
     ttk.Button(frame_menu, text="🛒  Menú de Compras", style="My.TButton", width=30, command=ventana_compras).grid(row=1, column=0, pady=10)
-    ttk.Button(frame_menu, text="📊  Menú de Ventas", style="My.TButton", width=30, command=SistemaVentaAutos).grid(row=2, column=0, pady=10)
+    ttk.Button(frame_menu, text="📊  Menú de Ventas", style="My.TButton", width=30, command=abrir_menu_ventas).grid(row=2, column=0, pady=10)
     ttk.Button(frame_menu, text="❌  Salir", style="My.TButton", width=30, command=ventana_menu.destroy).grid(row=3, column=0, pady=(30, 0))
 
     ventana_menu.mainloop()

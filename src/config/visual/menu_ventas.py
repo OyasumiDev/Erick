@@ -1,141 +1,72 @@
+# src/config/visual/menu_ventas.py
+
 import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox
-from database.database_mysql import DatabaseMysql
+from models.auto_model import AutoModel
 
 class SistemaVentaAutos:
-    
-    def __init__(self):
-        self.database = DatabaseMysql()  # Asegúrate de que tu clase de base de datos esté configurada
-        self.menu_ventas()
+    def __init__(self, master):
+        self.master = master
+        self.master.title("💸 Menú de Ventas")  # Título de la ventana
+        self.master.geometry("700x500")  # Tamaño de la ventana
 
-    def menu_ventas(self):
-        # Aquí directamente mostramos la ventana con la tabla de autos vendidos, sin abrir una ventana adicional
-        self.ventana_ventas = tk.Tk()
-        self.ventana_ventas.title("Autos Vendidos")
-        self.ventana_ventas.geometry("1280x720")  # Tamaño pequeño de ventana
-        
-        self.ventana_ventas.config(bg="#f2f2f2")
-        
-        # Título de la tabla
-        label_titulo_ventas = tk.Label(self.ventana_ventas, text="Autos Vendidos", font=("Arial", 20, "bold"), bg="#f2f2f2", fg="#333")
-        label_titulo_ventas.pack(pady=20)
+        self.auto_model = AutoModel()  # Instancia del modelo de autos
 
-        # Crear un Treeview para mostrar los datos de los autos vendidos
-        self.tree = ttk.Treeview(self.ventana_ventas, columns=("ID", "Estado", "Marca", "Cilindros", "Año", "Precio", "Fecha de Venta"), show="headings")
-        
-        # Estilo para la tabla
-        self.tree.heading("ID", text="ID")
-        self.tree.heading("Estado", text="Estado")
-        self.tree.heading("Marca", text="Marca")
-        self.tree.heading("Cilindros", text="Cilindros")
-        self.tree.heading("Año", text="Año")
-        self.tree.heading("Precio", text="Precio")
-        self.tree.heading("Fecha de Venta", text="Fecha de Venta")
+        # Frame principal para contener los elementos del menú
+        self.frame = tk.Frame(self.master)
+        self.frame.pack(padx=20, pady=20, fill="both", expand=True)
 
-        self.tree.column("ID", width=50, anchor="center")
-        self.tree.column("Estado", width=100, anchor="center")
-        self.tree.column("Marca", width=150, anchor="center")
-        self.tree.column("Cilindros", width=100, anchor="center")
-        self.tree.column("Año", width=100, anchor="center")
-        self.tree.column("Precio", width=100, anchor="center")
-        self.tree.column("Fecha de Venta", width=150, anchor="center")
+        # Título en el menú
+        self.titulo = tk.Label(self.frame, text="Autos Vendidos", font=("Arial", 16))
+        self.titulo.pack(pady=10)
 
-        # Obtener los autos vendidos de la base de datos
-        autos_vendidos = self.obtener_autos_vendidos()
+        # Lista donde se mostrarán los autos vendidos
+        self.lista_autos = tk.Listbox(self.frame, font=("Arial", 12), width=80, height=15)
+        self.lista_autos.pack(pady=10)
 
-        # Llenar el Treeview con los datos de los autos vendidos
-        for auto in autos_vendidos:
-            self.tree.insert("", tk.END, values=(auto["auto_id"], auto["estado"], auto["marca"], auto["cilindros"], auto["anio"], auto["precio"], auto["fecha_venta"]))
+        # Botón para actualizar la lista de autos vendidos
+        self.boton_actualizar = tk.Button(self.frame, text="🔄 Actualizar Lista", command=self.cargar_autos)
+        self.boton_actualizar.pack(pady=5)
 
-        # Mostrar el Treeview en la ventana
-        self.tree.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
+        # Cargar la lista de autos vendidos al iniciar
+        self.cargar_autos()
 
-        # Botón para cerrar la ventana, centrado en la parte inferior
-        boton_cerrar = tk.Button(self.ventana_ventas, text="Cerrar", command=self.ventana_ventas.destroy, font=("Arial", 14), bg="#FF5733", fg="white", relief="raised", bd=3)
-        boton_cerrar.pack(side="bottom", pady=20, padx=20, anchor="center")
+    def cargar_autos(self):
+        """Carga y muestra los autos vendidos desde la base de datos"""
+        self.lista_autos.delete(0, tk.END)  # Limpiar la lista antes de actualizar
+        autos = self.auto_model.get_autos_vendidos()  # Obtener autos vendidos desde el modelo
 
-        # Botón para actualizar datos
-        boton_actualizar = tk.Button(self.ventana_ventas, text="Actualizar", command=self.actualizar_auto, font=("Arial", 14), bg="#33B5FF", fg="white", relief="raised", bd=3)
-        boton_actualizar.pack(side="bottom", pady=20, padx=20, anchor="center")
-
-        self.ventana_ventas.mainloop()
-
-    def obtener_autos_vendidos(self):
-        # Ajusté el método para devolver correctamente los resultados como lista de diccionarios
-        query = "SELECT auto_id, estado, marca, cilindros, anio, precio, fecha_venta FROM ventas"
-        resultado = self.database.get_all(query)
-        if isinstance(resultado, list):  # Verificar que el resultado sea una lista
-            return resultado
+        if isinstance(autos, list) and autos:  # Verificar que haya autos vendidos
+            self.autos_lista = autos  # Guardar la lista de autos vendidos
+            for auto in autos:
+                # Mostrar los detalles de cada auto en la lista
+                texto = f"ID {auto['id']} | {auto['marca']} | {auto['estado']} | {auto['anio']} | {auto['cilindros']} cil | ${auto['precio']}"
+                self.lista_autos.insert(tk.END, texto)  # Insertar auto en la lista
         else:
-            messagebox.showerror("Error", "Error al obtener autos vendidos.")
-            return []
+            # Si no hay autos vendidos, mostrar un mensaje
+            messagebox.showinfo("Sin ventas", "No hay autos vendidos.")
 
-    def actualizar_auto(self):
-        # Obtener el ID del auto seleccionado
-        seleccionado = self.tree.selection()
-        if not seleccionado:
-            messagebox.showerror("Error", "Por favor, selecciona un auto para actualizar.")
+    def comprar_auto(self):
+        """Simula la compra de un auto (para el menú de compras)"""
+        seleccion = self.lista_autos.curselection()  # Verificar si se seleccionó un auto
+        if not seleccion:
+            messagebox.showwarning("Seleccionar auto", "Selecciona un auto para comprar.")  # Advertencia si no se seleccionó
             return
-        
-        auto_id = self.tree.item(seleccionado[0])['values'][0]  # Obtener el ID del auto seleccionado
 
-        # Crear ventana emergente para editar los datos del auto
-        self.ventana_actualizacion = tk.Toplevel(self.ventana_ventas)
-        self.ventana_actualizacion.title("Actualizar Auto")
-        self.ventana_actualizacion.geometry("400x300")
-        
-        # Etiquetas y campos de entrada para actualizar los datos del auto
-        tk.Label(self.ventana_actualizacion, text="Estado").pack(pady=5)
-        entry_estado = tk.Entry(self.ventana_actualizacion)
-        entry_estado.pack(pady=5)
-        
-        tk.Label(self.ventana_actualizacion, text="Marca").pack(pady=5)
-        entry_marca = tk.Entry(self.ventana_actualizacion)
-        entry_marca.pack(pady=5)
-        
-        tk.Label(self.ventana_actualizacion, text="Cilindros").pack(pady=5)
-        entry_cilindros = tk.Entry(self.ventana_actualizacion)
-        entry_cilindros.pack(pady=5)
-        
-        tk.Label(self.ventana_actualizacion, text="Año").pack(pady=5)
-        entry_anio = tk.Entry(self.ventana_actualizacion)
-        entry_anio.pack(pady=5)
-        
-        tk.Label(self.ventana_actualizacion, text="Precio").pack(pady=5)
-        entry_precio = tk.Entry(self.ventana_actualizacion)
-        entry_precio.pack(pady=5)
-        
-        # Función para actualizar los datos en la base de datos
-        def actualizar_en_base_de_datos():
-            estado = entry_estado.get()
-            marca = entry_marca.get()
-            cilindros = entry_cilindros.get()
-            anio = entry_anio.get()
-            precio = entry_precio.get()
+        # Obtener el auto seleccionado
+        index = seleccion[0]
+        auto = self.autos_lista[index]
+        auto_id = auto['id']
 
-            if not (estado and marca and cilindros and anio and precio):
-                messagebox.showerror("Error", "Todos los campos son obligatorios.")
-                return
-
-            # Ejecutar la actualización en la base de datos
-            query = f"""
-                UPDATE ventas
-                SET estado = '{estado}', marca = '{marca}', cilindros = {cilindros}, anio = {anio}, precio = {precio}
-                WHERE auto_id = {auto_id}
-            """
-            resultado = self.database.execute_query(query)
-            if resultado:
-                messagebox.showinfo("Éxito", "Auto actualizado correctamente.")
-                self.ventana_actualizacion.destroy()
-                self.menu_ventas()  # Volver a cargar la lista de autos actualizada
-            else:
-                messagebox.showerror("Error", "No se pudo actualizar el auto.")
-        
-        # Botón para confirmar la actualización
-        boton_actualizar_db = tk.Button(self.ventana_actualizacion, text="Actualizar", command=actualizar_en_base_de_datos)
-        boton_actualizar_db.pack(pady=20)
-
-# Instancia y ejecución del sistema
-if __name__ == "__main__":
-    sistema = SistemaVentaAutos()
+        # Confirmación para comprar el auto
+        confirmacion = messagebox.askyesno("Confirmar compra", f"¿Seguro que deseas comprar el auto ID {auto_id}?")
+        if confirmacion:
+            # Si se confirma, eliminar el auto de la tabla `autos` (para marcarlo como vendido)
+            query = "DELETE FROM autos WHERE id = %s"
+            try:
+                self.auto_model.db.execute_query(query, (auto_id,))  # Ejecutar la consulta para eliminar el auto
+                messagebox.showinfo("Compra realizada", f"Auto ID {auto_id} comprado con éxito.")  # Confirmación de compra exitosa
+                self.cargar_autos()  # Actualizar la lista de autos vendidos
+            except Exception as e:
+                # Manejo de errores en caso de que la compra falle
+                messagebox.showerror("Error", f"No se pudo realizar la compra: {e}")

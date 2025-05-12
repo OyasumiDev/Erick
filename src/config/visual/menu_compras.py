@@ -32,7 +32,7 @@ def obtener_autos_disponibles():
 
 def comprar_auto_por_id(tree, id_entry):
     auto_id = id_entry.get()
-    if not auto_id.isdigit():
+    if not auto_id.isdigit() or auto_id == "":
         messagebox.showwarning("ID inválido", "Ingrese un ID numérico válido.")
         return
 
@@ -45,16 +45,22 @@ def comprar_auto_por_id(tree, id_entry):
         )
         cursor = conn.cursor()
         cursor.execute("DELETE FROM autos WHERE id = %s", (auto_id,))
+        
         if cursor.rowcount == 0:
             messagebox.showinfo("No encontrado", f"No existe auto con ID {auto_id}.")
+            # No se cierra la ventana de compras, solo el mensaje
         else:
             conn.commit()
             messagebox.showinfo("Compra exitosa", f"Auto con ID {auto_id} comprado.")
             # Actualiza la tabla
             actualizar_tabla(tree)
+            
         conn.close()
     except Exception as e:
+        # Esto no debería cerrar el menú de compras, solo muestra un error
         messagebox.showerror("Error", f"No se pudo completar la compra: {e}")
+        # Esto asegura que la ventana de compras no se cierre
+
 
 def actualizar_tabla(tree):
     for row in tree.get_children():
@@ -70,7 +76,7 @@ def ventana_compras():
 
     style = ttk.Style()
     style.configure("My.TFrame", background="#D3D3D3")
-    style.configure("My.TButton", font=("Segoe UI", 12), padding=6)
+    style.configure("My.TButton", font=("Segoe UI", 12), padding=6, relief="flat")
     style.configure("My.TLabel", background="#D3D3D3", font=("Segoe UI", 16, "bold"))
 
     # Frame principal
@@ -95,6 +101,13 @@ def ventana_compras():
     ttk.Label(id_frame, text="ID del Auto a Comprar:", style="My.TLabel").pack(side="left", padx=5)
     id_entry = ttk.Entry(id_frame)
     id_entry.pack(side="left", padx=5)
+
+    # Función para hacer la compra al presionar Enter
+    def comprar_con_enter(event=None):
+        comprar_auto_por_id(tree, id_entry)
+
+    # Bind de la tecla Enter
+    id_entry.bind("<Return>", comprar_con_enter)
 
     # Botón de comprar
     ttk.Button(frame, text="Comprar Auto", style="My.TButton",

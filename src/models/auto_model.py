@@ -1,6 +1,5 @@
 from database.database_mysql import DatabaseMysql
 from enums.e_autos import E_AUTO
-from config.visual.menu_visual import MenuVisual
 
 class AutoModel:
     """Clase que maneja las operaciones relacionadas con autos."""
@@ -12,20 +11,35 @@ class AutoModel:
         """Obtiene la lista de autos con estado 'NUEVO' desde la base de datos."""
         try:
             query = f"""
-                SELECT id, estado, marca, num_cilindros, anio, precio
+                SELECT id, estado, marca, cilindros, anio, precio
                 FROM {E_AUTO.TABLE.value}
                 WHERE estado = %s
             """
             params = ("NUEVO",)
             result = self.db.get_all(query, params)
 
-            if result["status"] == "success":
+            if result.get("status") == "success":
                 return result
             else:
-                raise Exception(result["message"])
+                return {"status": "error", "message": result.get("message", "Error desconocido")}
 
         except Exception as e:
             return {"status": "error", "message": str(e)}
+
+    def get_autos_vendidos(self):
+        query = "SELECT * FROM ventas;"  # Consulta a la tabla de ventas
+        connection = self.db._get_connection()  # Cambiar a _get_connection
+        if connection:
+            cursor = connection.cursor()  # Obtener el cursor de la conexión
+            try:
+                cursor.execute(query)  # Ejecutar la consulta
+                result = cursor.fetchall()  # Obtener todos los resultados de la consulta
+                return result  # Devuelve los autos vendidos
+            finally:
+                cursor.close()  # Asegúrate de cerrar el cursor
+                connection.close()  # Y también cierra la conexión después de usarla
+        else:
+            return {"status": "error", "message": "No se pudo obtener la conexión"}
 
     def get_compras(self):
         """Obtiene todos los autos desde la base de datos."""
@@ -40,13 +54,11 @@ class AutoModel:
             print(f"Error al obtener datos: {e}")
             return {"status": "error", "message": str(e)}
 
-
-
     def add(self, marca, anio, estado, cilindros, precio):
         """Agrega un nuevo auto a la base de datos."""
         try:
             query = f"""
-                INSERT INTO {E_AUTO.TABLE.value} (marca, anio, estado, num_cilindros, precio)
+                INSERT INTO {E_AUTO.TABLE.value} (marca, anio, estado, cilindros, precio)
                 VALUES (%s, %s, %s, %s, %s)
             """
             params = (marca, anio, estado, cilindros, precio)
