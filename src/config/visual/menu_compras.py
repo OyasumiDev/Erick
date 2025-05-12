@@ -1,42 +1,107 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+import mysql.connector
+import os
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
+
+# Obtener las credenciales de la base de datos desde las variables de entorno
+DB_HOST = os.getenv('DB_HOST')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_DATABASE = os.getenv('DB_DATABASE')
+
+def obtener_autos_disponibles():
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_DATABASE
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, estado, marca, cilindros, anio, precio FROM autos")
+        autos = cursor.fetchall()
+        conn.close()
+        return autos
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo obtener autos: {e}")
+        return []
+
+def comprar_auto_por_id(tree, id_entry):
+    auto_id = id_entry.get()
+    if not auto_id.isdigit():
+        messagebox.showwarning("ID inválido", "Ingrese un ID numérico válido.")
+        return
+
+    try:
+        conn = mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_DATABASE
+        )
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM autos WHERE id = %s", (auto_id,))
+        if cursor.rowcount == 0:
+            messagebox.showinfo("No encontrado", f"No existe auto con ID {auto_id}.")
+        else:
+            conn.commit()
+            messagebox.showinfo("Compra exitosa", f"Auto con ID {auto_id} comprado.")
+            # Actualiza la tabla
+            actualizar_tabla(tree)
+        conn.close()
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo completar la compra: {e}")
+
+def actualizar_tabla(tree):
+    for row in tree.get_children():
+        tree.delete(row)
+    for auto in obtener_autos_disponibles():
+        tree.insert("", "end", values=auto)
 
 def ventana_compras():
-    """Ventana para el menú de compras."""
-    ventana_compras = tk.Toplevel()  # Crear una nueva ventana
+    ventana_compras = tk.Toplevel()
     ventana_compras.title("Menú de Compras")
-    
-    # Dimensiones de la ventana
-    window_width = 800
-    window_height = 600
-
-    # Centrar la ventana en la pantalla
-    screen_width = ventana_compras.winfo_screenwidth()
-    screen_height = ventana_compras.winfo_screenheight()
-    position_top = int(screen_height / 2 - window_height / 2)
-    position_right = int(screen_width / 2 - window_width / 2)
-    ventana_compras.geometry(f"{window_width}x{window_height}+{position_right}+{position_top}")
-    
+    ventana_compras.geometry("1000x600")
     ventana_compras.config(bg="#D3D3D3")
 
-    # Frame para la ventana de compras
-    frame_compras = ttk.Frame(ventana_compras, padding="40", style="My.TFrame")
-    frame_compras.place(relx=0.5, rely=0.5, anchor="center")
-
-    # Estilo para los elementos
     style = ttk.Style()
     style.configure("My.TFrame", background="#D3D3D3")
-    style.configure("My.TButton", font=("Segoe UI", 14), padding=10)
-    style.configure("My.TLabel", background="#D3D3D3", font=("Segoe UI", 24, "bold"))
+    style.configure("My.TButton", font=("Segoe UI", 12), padding=6)
+    style.configure("My.TLabel", background="#D3D3D3", font=("Segoe UI", 16, "bold"))
 
-    # Título de la ventana de compras
-    title_label = ttk.Label(frame_compras, text="Menú de Compras", style="My.TLabel")
-    title_label.grid(row=0, column=0, pady=(0, 30))
+    # Frame principal
+    frame = ttk.Frame(ventana_compras, padding="20", style="My.TFrame")
+    frame.pack(fill="both", expand=True)
 
-    # Botón de acción en la ventana de compras (por ejemplo, mostrar productos)
-    ttk.Button(frame_compras, text="Ver Autos Disponibles", style="My.TButton", width=25, command=lambda: print("Mostrar autos")).grid(row=1, column=0, pady=10)
+    title_label = ttk.Label(frame, text="Autos Disponibles", style="My.TLabel")
+    title_label.pack(pady=(0, 10))
 
-    # Botón para cerrar la ventana de compras
-    ttk.Button(frame_compras, text="Cerrar", style="My.TButton", width=25, command=ventana_compras.destroy).grid(row=2, column=0, pady=(30, 0))
+    # Tabla con autos
+    columns = ("ID", "Estado", "Marca", "Cilindros", "Año", "Precio")
+    tree = ttk.Treeview(frame, columns=columns, show="headings", height=10)
+    for col in columns:
+        tree.heading(col, text=col)
+        tree.column(col, anchor="center")
+    tree.pack(fill="both", padx=10, pady=10)
+    actualizar_tabla(tree)
 
-    ventana_compras.mainloop()
+    # Entrada de ID
+    id_frame = ttk.Frame(frame, style="My.TFrame")
+    id_frame.pack(pady=10)
+    ttk.Label(id_frame, text="ID del Auto a Comprar:", style="My.TLabel").pack(side="left", padx=5)
+    id_entry = ttk.Entry(id_frame)
+    id_entry.pack(side="left", padx=5)
+
+    # Botón de comprar
+    ttk.Button(frame, text="Comprar Auto", style="My.TButton",
+               command=lambda: comprar_auto_por_id(tree, id_entry)).pack(pady=10)
+
+    # Botón cerrar
+    ttk.Button(frame, text="Cerrar", style="My.TButton", command=ventana_compras.destroy).pack(pady=10)
+
+if __name__ == "__main__":
+    ventana_compras()
