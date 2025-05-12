@@ -1,24 +1,23 @@
 from database.database_mysql import DatabaseMysql
+from enums.e_autos import E_AUTO
 
 class DatabaseImport:
     def import_db(self):
-        # Usamos la nueva clase DatabaseMysql con el pool de conexiones
-        db = DatabaseMysql()  # Obtén la instancia de la clase con el pool de conexiones
+        db = DatabaseMysql()
         
         try:
-            # Verificamos si la tabla autos está vacía usando el pool de conexiones
+            # Verificar si la tabla 'autos' ya contiene datos
             query = "SELECT COUNT(*) FROM autos"
-            result = db.run_query(query)  # Ejecutamos la consulta de conteo
-            count = result[0][0]  # Extraemos el valor del conteo de registros
+            result = db.run_query(query)
+            count = result[0][0]
 
             if count > 0:
                 print("⚠️ La tabla ya contiene datos. No se insertará nada.")
                 return
 
-            # Iniciamos una transacción
+            # Iniciar transacción
             db.run_query("START TRANSACTION;")
 
-            # Lista de autos a insertar
             autos = [
                         ('NUEVO', 'NISSAN', 6, 2024, 435000.00),
                         ('USADOS', 'NISSAN', 4, 2014, 150000.00),
@@ -122,19 +121,20 @@ class DatabaseImport:
                         ('NUEVO', 'HYUNDAI', 6, 2024, 410000.00)
                     ]
 
-            # Insertar los autos usando el método run_query
-            for auto in autos:
-                query = f"""
-                    INSERT INTO autos (estado, marca, cilindros, anio, precio)
-                    VALUES (%s, %s, %s, %s, %s)
-                """
-                db.run_query(query, auto)
+            # Consulta de inserción
+            insert_query = """
+                INSERT INTO autos (estado, marca, cilindros, anio, precio) 
+                VALUES (%s, %s, %s, %s, %s)
+            """
 
-            # Confirmamos la transacción
+            # Ejecutar inserción masiva
+            db.run_many(insert_query, autos)
+
+            # Confirmar transacción
             db.run_query("COMMIT;")
             print("✅ Autos importados correctamente.")
         
         except Exception as e:
-            # Si ocurre un error, hacemos un rollback de la transacción
+            # Revertir transacción en caso de error
             db.run_query("ROLLBACK;")
             print(f"❌ Error al importar los autos: {e}")

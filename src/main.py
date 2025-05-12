@@ -47,12 +47,16 @@ def main():
         print("🧹 Limpiando __pycache__...")
         eliminar_pycache()
 
-        print("🔁 Reiniciando base de datos...")
-        resetear_base_datos()
+        db = DatabaseMysql()
+        if db.is_autos_empty():
+            print("🔁 Reiniciando base de datos...")
+            resetear_base_datos()
 
-        print("📥 Cargando autos por defecto...")
-        db_importador = DatabaseImport()
-        db_importador.import_db()
+            print("📥 Cargando autos por defecto...")
+            db_importador = DatabaseImport()
+            db_importador.import_db()
+        else:
+            print("✅ Base de datos ya tiene autos, no se reinicia.")
 
         print("🚗 Iniciando menú visual...")
 

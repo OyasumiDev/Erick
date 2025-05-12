@@ -32,13 +32,14 @@ class AutoModel:
         query = f"SELECT * FROM {E_AUTO.TABLE.value}"
         try:
             result = self.db.get_all(query)
-            if result["status"] == "success":
-                return result["data"]  # Retorna solo los datos, no el status
+            if result:  # Comprobamos si result no está vacío
+                return result
             else:
-                raise Exception(result["message"])
+                raise Exception("No se encontraron autos.")
         except Exception as e:
             print(f"Error al obtener datos: {e}")
             return {"status": "error", "message": str(e)}
+
 
 
     def add(self, marca, anio, estado, cilindros, precio):

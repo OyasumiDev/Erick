@@ -1,5 +1,3 @@
-# src/database/database_mysql.py
-
 import mysql.connector
 from mysql.connector import pooling, Error
 from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
@@ -59,6 +57,21 @@ class DatabaseMysql:
                 conn.close()
         return {"status": "error", "message": "No se pudo obtener la conexión"}
 
+    def execute_many(self, query, params_list):
+        """Ejecuta una consulta SQL para múltiples registros."""
+        conn = self._get_connection()
+        if conn:
+            try:
+                with conn.cursor() as cursor:
+                    cursor.executemany(query, params_list)
+                    conn.commit()
+                return {"status": "success", "message": "Consulta ejecutada correctamente"}
+            except Error as e:
+                return {"status": "error", "message": str(e)}
+            finally:
+                conn.close()
+        return {"status": "error", "message": "No se pudo obtener la conexión"}
+
     def run_query(self, query, params=None):
         """Ejecuta una consulta SELECT y retorna resultados crudos."""
         conn = self._get_connection()
@@ -72,6 +85,19 @@ class DatabaseMysql:
             finally:
                 conn.close()
         return []
+
+    def run_many(self, query, params_list):
+        try:
+            with self.pool.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.executemany(query, params_list)
+                    conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e    
+
+
+
 
     def get_one(self, query: str, params: tuple = (), dictionary: bool = True):
         """Obtiene un único registro de la base de datos."""
@@ -95,7 +121,7 @@ class DatabaseMysql:
                 with conn.cursor(buffered=True, dictionary=True) as cursor:
                     cursor.execute(query, params or ())
                     rows = cursor.fetchall()
-                return {"status": "success", "data": rows}
+                return rows  # Devuelve directamente los datos
             except Exception as e:
                 return {"status": "error", "message": str(e), "data": []}
             finally:
