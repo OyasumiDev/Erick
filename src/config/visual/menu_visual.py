@@ -19,7 +19,7 @@ def mostrar_menu():
 
     # --- Rutas seguras ---
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    img_perfil_path = os.path.join(BASE_DIR, "assets", "root_user.jpeg")
+    img_perfil_path = os.path.join(BASE_DIR, "assets", "root_user.jpg")
     img_fondo_path = os.path.join(BASE_DIR, "assets", "fondo_menu.jpg")
 
     # --- Cargar fondo ---
@@ -50,7 +50,7 @@ def mostrar_menu():
         img_label.image = imagen_usuario  # Mantener una referencia a la imagen
         img_label.pack(side="left", padx=5)
 
-    user_label = tk.Label(header_frame, text="USUARIO: ROOT", font=("Segoe UI", 14, "bold"), bg="#D3D3D3")
+    user_label = tk.Label(header_frame, text="usuario: root🧑‍💻", font=("Segoe UI", 14, "bold"), bg="#D3D3D3")
     user_label.pack(side="left", padx=10)
 
     # --- Frame central con botones ---
