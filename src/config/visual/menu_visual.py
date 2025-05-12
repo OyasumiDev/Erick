@@ -2,9 +2,10 @@ import tkinter as tk
 from tkinter import ttk
 from PIL import Image, ImageTk
 import os
-
+from import_db import DatabaseImport
 from config.visual.menu_compras import ventana_compras  
 from config.visual.menu_ventas import SistemaVentaAutos
+from database.reset_db import reset_db  # Importamos la función reset_db
 
 def abrir_menu_ventas():
     ventana_ventas = tk.Toplevel()  # Crea una ventana hija
@@ -66,6 +67,10 @@ def mostrar_menu():
 
     ttk.Button(frame_menu, text="🛒  Menú de Compras", style="My.TButton", width=30, command=ventana_compras).grid(row=1, column=0, pady=10)
     ttk.Button(frame_menu, text="📊  Menú de Ventas", style="My.TButton", width=30, command=abrir_menu_ventas).grid(row=2, column=0, pady=10)
-    ttk.Button(frame_menu, text="❌  Salir", style="My.TButton", width=30, command=ventana_menu.destroy).grid(row=3, column=0, pady=(30, 0))
+    
+    # Botón para resetear la base de datos
+    ttk.Button(frame_menu, text="🔄  Resetear Base de Datos", style="My.TButton", width=30, command=reset_db).grid(row=3, column=0, pady=10)
+
+    ttk.Button(frame_menu, text="❌  Salir", style="My.TButton", width=30, command=ventana_menu.destroy).grid(row=4, column=0, pady=(30, 0))
 
     ventana_menu.mainloop()

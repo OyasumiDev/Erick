@@ -11,7 +11,7 @@ from import_db import DatabaseImport
 from enums.e_autos import E_AUTO
 from config.eliminar_cache import eliminar_pycache
 from config.visual.menu_visual import mostrar_menu
-
+from database.reset_db import reset_db
 # Definimos la función para eliminar el __pycache__
 def resetear_base_datos():
     """Elimina la tabla de autos y la recrea desde cero usando los enums."""
