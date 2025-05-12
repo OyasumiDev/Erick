@@ -2,13 +2,14 @@
 
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 from models.auto_model import AutoModel
 
 class SistemaVentaAutos:
     def __init__(self, master):
         self.master = master
         self.master.title("💸 Menú de Ventas")  # Título de la ventana
-        self.master.geometry("700x500")  # Tamaño de la ventana
+        self.master.geometry("800x600")  # Tamaño de la ventana
 
         self.auto_model = AutoModel()  # Instancia del modelo de autos
 
@@ -20,9 +21,25 @@ class SistemaVentaAutos:
         self.titulo = tk.Label(self.frame, text="Autos Vendidos", font=("Arial", 16))
         self.titulo.pack(pady=10)
 
-        # Lista donde se mostrarán los autos vendidos
-        self.lista_autos = tk.Listbox(self.frame, font=("Arial", 12), width=80, height=15)
-        self.lista_autos.pack(pady=10)
+        # Crear un Treeview (tabla) para mostrar los autos vendidos
+        self.tree = ttk.Treeview(self.frame, columns=("ID", "Marca", "Estado", "Año", "Cilindrada", "Precio"), show="headings", height=15)
+        self.tree.pack(pady=10)
+
+        # Configuración de los encabezados de la tabla
+        self.tree.heading("ID", text="ID")
+        self.tree.heading("Marca", text="Marca")
+        self.tree.heading("Estado", text="Estado")
+        self.tree.heading("Año", text="Año")
+        self.tree.heading("Cilindrada", text="Cilindrada (cil)")
+        self.tree.heading("Precio", text="Precio ($)")
+
+        # Ajustar el ancho de las columnas
+        self.tree.column("ID", width=50, anchor="center")
+        self.tree.column("Marca", width=150, anchor="w")
+        self.tree.column("Estado", width=100, anchor="w")
+        self.tree.column("Año", width=80, anchor="center")
+        self.tree.column("Cilindrada", width=100, anchor="center")
+        self.tree.column("Precio", width=120, anchor="e")
 
         # Botón para actualizar la lista de autos vendidos
         self.boton_actualizar = tk.Button(self.frame, text="🔄 Actualizar Lista", command=self.cargar_autos)
@@ -33,30 +50,32 @@ class SistemaVentaAutos:
 
     def cargar_autos(self):
         """Carga y muestra los autos vendidos desde la base de datos"""
-        self.lista_autos.delete(0, tk.END)  # Limpiar la lista antes de actualizar
+        # Limpiar la tabla antes de actualizar
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
         autos = self.auto_model.get_autos_vendidos()  # Obtener autos vendidos desde el modelo
 
         if isinstance(autos, list) and autos:  # Verificar que haya autos vendidos
             self.autos_lista = autos  # Guardar la lista de autos vendidos
             for auto in autos:
-                # Mostrar los detalles de cada auto en la lista
-                texto = f"ID {auto['id']} | {auto['marca']} | {auto['estado']} | {auto['anio']} | {auto['cilindros']} cil | ${auto['precio']}"
-                self.lista_autos.insert(tk.END, texto)  # Insertar auto en la lista
+                # Insertar los datos de cada auto en la tabla
+                self.tree.insert("", tk.END, values=(auto[0], auto[2], auto[1], auto[4], auto[3], f"${auto[5]:,.2f}"))
         else:
             # Si no hay autos vendidos, mostrar un mensaje
             messagebox.showinfo("Sin ventas", "No hay autos vendidos.")
 
     def comprar_auto(self):
         """Simula la compra de un auto (para el menú de compras)"""
-        seleccion = self.lista_autos.curselection()  # Verificar si se seleccionó un auto
+        seleccion = self.tree.selection()  # Verificar si se seleccionó un auto
         if not seleccion:
             messagebox.showwarning("Seleccionar auto", "Selecciona un auto para comprar.")  # Advertencia si no se seleccionó
             return
 
         # Obtener el auto seleccionado
-        index = seleccion[0]
-        auto = self.autos_lista[index]
-        auto_id = auto['id']
+        item = seleccion[0]
+        auto = self.tree.item(item)["values"]
+        auto_id = auto[0]  # Accedemos al ID usando el valor de la tupla
 
         # Confirmación para comprar el auto
         confirmacion = messagebox.askyesno("Confirmar compra", f"¿Seguro que deseas comprar el auto ID {auto_id}?")
