@@ -1,4 +1,3 @@
-import mysql.connector
 from mysql.connector import pooling, Error
 from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
 from enums.e_autos import E_AUTO
@@ -16,7 +15,6 @@ class DatabaseMysql:
         self._initialize_connection_pool()
 
     def _initialize_connection_pool(self):
-        """Configura el pool de conexiones para mejorar el rendimiento."""
         try:
             dbconfig = {
                 "host": self.host,
@@ -35,179 +33,108 @@ class DatabaseMysql:
             print(f"❌ Error al inicializar el pool de conexiones: {e}")
 
     def _get_connection(self):
-        """Obtiene una conexión del pool."""
-        if self.pool:
-            return self.pool.get_connection()
-        else:
+        try:
+            if self.pool:
+                return self.pool.get_connection()
             print("❌ Pool de conexiones no inicializado")
-            return None
-
-    def execute_query(self, query, params=None):
-        connection = self._get_connection()
-        cursor = connection.cursor()
-        try:
-            cursor.execute(query, params)  # Ejecutar la consulta
-            
-            if query.strip().upper().startswith("SELECT"):  # Si es una consulta SELECT
-                result = cursor.fetchall()  # Obtener resultados
-                return result
-            else:
-                connection.commit()  # Si no es SELECT, hacer commit de la transacción
-        finally:
-            cursor.close()  # Cerrar el cursor
-
-    def execute_many(self, query, params_list):
-        """Ejecuta una consulta SQL para múltiples registros."""
-        conn = self._get_connection()
-        if conn:
-            try:
-                with conn.cursor() as cursor:
-                    cursor.executemany(query, params_list)
-                    conn.commit()
-                return {"status": "success", "message": "Consulta ejecutada correctamente"}
-            except Error as e:
-                return {"status": "error", "message": str(e)}
-            finally:
-                conn.close()
-        return {"status": "error", "message": "No se pudo obtener la conexión"}
-
-    def run_query(self, query, params=None):
-        """Ejecuta una consulta SELECT y retorna resultados crudos."""
-        conn = self._get_connection()
-        if conn:
-            try:
-                with conn.cursor() as cursor:
-                    cursor.execute(query, params or ())
-                    return cursor.fetchall()
-            except Error as e:
-                print(f"❌ Error en run_query: {e}")
-            finally:
-                conn.close()
-        return []
-
-    def run_many(self, query, params_list):
-        try:
-            with self.pool.get_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.executemany(query, params_list)
-                    conn.commit()
-        except Exception as e:
-            conn.rollback()
-            raise e    
-
-    def get_one(self, query: str, params: tuple = (), dictionary: bool = True):
-        """Obtiene un único registro de la base de datos."""
-        conn = self._get_connection()
-        if conn:
-            try:
-                with conn.cursor(buffered=True, dictionary=dictionary) as cursor:
-                    cursor.execute(query, params)
-                    return cursor.fetchone()
-            except Error as e:
-                print(f"❌ Error en get_one: {e}")
-            finally:
-                conn.close()
+        except Error as e:
+            print(f"❌ Error al obtener conexión: {e}")
         return None
 
-    def get_all(self, query, params=None):
-        """Obtiene múltiples registros de la base de datos."""
+    def execute_query(self, query, params=None):
         conn = self._get_connection()
-        if conn:
+        if not conn:
+            return {"status": "error", "message": "No se pudo obtener conexión"}
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            if query.strip().upper().startswith("SELECT"):
+                result = cursor.fetchall()
+                return {"status": "success", "data": result}
+            else:
+                conn.commit()
+                return {"status": "success", "message": "Consulta ejecutada correctamente"}
+        except Error as e:
+            print(f"❌ Error en execute_query: {e}")
+            return {"status": "error", "message": str(e)}
+        finally:
             try:
-                with conn.cursor(buffered=True, dictionary=True) as cursor:
-                    cursor.execute(query, params or ())
-                    rows = cursor.fetchall()
-                return {"status": "success", "data": rows}  # Modificado para devolver status y data
-            except Exception as e:
-                return {"status": "error", "message": str(e), "data": []}
-            finally:
+                cursor.close()
                 conn.close()
-        else:
+            except:
+                pass
+
+    def execute_many(self, query, params_list):
+        conn = self._get_connection()
+        if not conn:
+            return {"status": "error", "message": "No se pudo obtener la conexión"}
+
+        try:
+            cursor = conn.cursor()
+            cursor.executemany(query, params_list)
+            conn.commit()
+            return {"status": "success", "message": "Inserción masiva realizada correctamente"}
+        except Error as e:
+            print(f"❌ Error en execute_many: {e}")
+            return {"status": "error", "message": str(e)}
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
+
+    def get_one(self, query: str, params: tuple = (), dictionary: bool = True):
+        conn = self._get_connection()
+        if not conn:
+            return {"status": "error", "message": "No se pudo obtener la conexión"}
+
+        try:
+            cursor = conn.cursor(buffered=True, dictionary=dictionary)
+            cursor.execute(query, params)
+            result = cursor.fetchone()
+            if result:
+                return {"status": "success", "data": result}
+            return {"status": "error", "message": "No se encontraron datos"}
+        except Error as e:
+            print(f"❌ Error en get_one: {e}")
+            return {"status": "error", "message": str(e)}
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
+
+    def get_all(self, query, params=None):
+        conn = self._get_connection()
+        if not conn:
             return {"status": "error", "message": "No se pudo obtener la conexión", "data": []}
 
+        try:
+            cursor = conn.cursor(buffered=True, dictionary=True)
+            cursor.execute(query, params or ())
+            rows = cursor.fetchall()
+            return {"status": "success", "data": rows}
+        except Error as e:
+            print(f"❌ Error en get_all: {e}")
+            return {"status": "error", "message": str(e), "data": []}
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
+
     def is_autos_empty(self) -> bool:
-        """Verifica si la tabla de autos está vacía."""
         try:
             query = f"SELECT COUNT(*) AS total FROM `{E_AUTO.TABLE.value}`"
             result = self.get_one(query)
-            return result.get("total", 0) == 0
+            return result.get("data", {}).get("total", 0) == 0
         except Exception as e:
             print(f"❌ Error verificando tabla autos: {e}")
             return True
 
     def close(self):
-        """Cierra todas las conexiones del pool (no es necesario usarlo en MySQLConnector)."""
-        pass
-
-
-class AutoModel:
-    """Clase que maneja las operaciones relacionadas con autos."""
-
-    def __init__(self):
-        self.db = DatabaseMysql()
-
-    def obtener_autos_nuevos(self):
-        """Obtiene la lista de autos con estado 'NUEVO' desde la base de datos."""
-        try:
-            query = f"""
-                SELECT id, estado, marca, cilindros, anio, precio
-                FROM {E_AUTO.TABLE.value}
-                WHERE estado = %s
-            """
-            params = ("NUEVO",)
-            result = self.db.get_all(query, params)
-
-            if result.get("status") == "success":
-                return result
-            else:
-                return {"status": "error", "message": result.get("message", "Error desconocido")}
-
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-
-    def get_autos_vendidos(self):
-        """Obtiene todos los autos vendidos desde la base de datos."""
-        query = "SELECT * FROM ventas;"  # Consulta a la tabla de ventas
-        connection = self.db._get_connection()  # Cambiar a _get_connection
-        if connection:
-            cursor = connection.cursor()  # Obtener el cursor de la conexión
-            try:
-                cursor.execute(query)  # Ejecutar la consulta
-                result = cursor.fetchall()  # Obtener todos los resultados de la consulta
-                return result  # Devuelve los autos vendidos
-            finally:
-                cursor.close()  # Asegúrate de cerrar el cursor
-                connection.close()  # Y también cierra la conexión después de usarla
-        else:
-            return {"status": "error", "message": "No se pudo obtener la conexión"}
-
-    def get_compras(self):
-        """Obtiene todos los autos desde la base de datos."""
-        query = f"SELECT * FROM {E_AUTO.TABLE.value}"
-        try:
-            result = self.db.get_all(query)
-            if result:  # Comprobamos si result no está vacío
-                return result
-            else:
-                raise Exception("No se encontraron autos.")
-        except Exception as e:
-            print(f"Error al obtener datos: {e}")
-            return {"status": "error", "message": str(e)}
-
-    def add(self, marca, anio, estado, cilindros, precio):
-        """Agrega un nuevo auto a la base de datos."""
-        try:
-            query = f"""
-                INSERT INTO {E_AUTO.TABLE.value} (marca, anio, estado, cilindros, precio)
-                VALUES (%s, %s, %s, %s, %s)
-            """
-            params = (marca, anio, estado, cilindros, precio)
-            result = self.db.execute_query(query, params)  # ✅ Cambio aquí
-
-            if result["status"] == "success":
-                return {"status": "success", "message": f"Auto {marca} {anio} agregado correctamente"}
-            else:
-                raise Exception(result["message"])
-
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
+        print("ℹ️ Cierre manual del pool no necesario en mysql.connector, pero método presente por estructura.")

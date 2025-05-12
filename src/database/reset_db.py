@@ -1,134 +1,44 @@
 from database.database_mysql import DatabaseMysql
+from enums.e_autos import E_AUTO
+from autos_data import autos_data
+
 
 def reset_db():
     """Reinicia las tablas de autos y ventas, y luego inserta nuevos autos."""
     db = DatabaseMysql()
 
     try:
+        # Iniciar transacción
+        db.execute_query("START TRANSACTION;")
+        print("🔄 Transacción iniciada...")
+
         # Resetear la tabla de autos (borrar todos los registros)
-        query_autos = "DELETE FROM autos;"
-        db.execute_query(query_autos)
+        query_autos = "TRUNCATE TABLE autos;"  # Cambié de DELETE a TRUNCATE
+        result_autos = db.execute_query(query_autos)
+        print(f"✅ Tabla de autos reiniciada. Filas afectadas: {result_autos}")
 
         # Resetear la tabla de ventas (borrar todos los registros)
-        query_ventas = "DELETE FROM ventas;"
-        db.execute_query(query_ventas)
+        query_ventas = "TRUNCATE TABLE ventas;"  # Cambié de DELETE a TRUNCATE
+        result_ventas = db.execute_query(query_ventas)
+        print(f"✅ Tabla de ventas reiniciada. Filas afectadas: {result_ventas}")
 
-        print("✅ Base de datos resetada con éxito: Tablas de autos y ventas reiniciadas.")
-
-        # Aquí puedes agregar los autos a insertar
+        # Insertar los autos en la base de datos usando autos_data
         insert_query = """
             INSERT INTO autos (estado, marca, cilindros, anio, precio)
             VALUES (%s, %s, %s, %s, %s)
         """
+        result_insert = db.execute_many(insert_query, autos_data)  # Cambié run_many por execute_many
+        print(f"✅ Autos insertados correctamente. Filas insertadas: {result_insert}")
 
-        autos = [
-            ('NUEVO', 'NISSAN', 6, 2024, 435000.00),
-            ('USADOS', 'NISSAN', 4, 2014, 150000.00),
-            ('NUEVO', 'CHEVROLET', 6, 2023, 410000.00),
-            ('USADOS', 'VOLKSWAGEN', 4, 2012, 120000.00),
-            ('USADOS', 'HONDA', 8, 2015, 175000.00),
-            ('NUEVO', 'TOYOTA', 4, 2024, 425000.00),
-            ('USADOS', 'FORD', 4, 2016, 165000.00),
-            ('NUEVO', 'HYUNDAI', 6, 2023, 400000.00),
-            ('USADOS', 'KIA', 6, 2014, 158000.00),
-            ('USADOS', 'HONDA', 4, 2013, 142000.00),
-            ('NUEVO', 'TOYOTA', 6, 2024, 460000.00),
-            ('USADOS', 'CHEVROLET', 6, 2015, 169000.00),
-            ('USADOS', 'BMW', 8, 2016, 240000.00),
-            ('NUEVO', 'FORD', 4, 2023, 395000.00),
-            ('NUEVO', 'TOYOTA', 4, 2024, 418000.00),
-            ('USADOS', 'KIA', 6, 2014, 160000.00),
-            ('USADOS', 'MERCEDES-BENZ', 6, 2013, 210000.00),
-            ('USADOS', 'NISSAN', 4, 2012, 135000.00),
-            ('NUEVO', 'TESLA', 4, 2024, 680000.00),
-            ('USADOS', 'JEEP', 6, 2015, 178000.00),
-            ('USADOS', 'TOYOTA', 6, 2014, 170000.00),
-            ('NUEVO', 'NISSAN', 4, 2023, 388000.00),
-            ('USADOS', 'FORD', 4, 2013, 145000.00),
-            ('USADOS', 'HONDA', 6, 2016, 185000.00),
-            ('NUEVO', 'BMW', 6, 2024, 640000.00),
-            ('USADOS', 'MITSUBISHI', 6, 2014, 155000.00),
-            ('USADOS', 'CHEVROLET', 4, 2013, 132000.00),
-            ('NUEVO', 'TESLA', 6, 2023, 715000.00),
-            ('USADOS', 'KIA', 6, 2015, 172000.00),
-            ('USADOS', 'FORD', 4, 2012, 130000.00),
-            ('NUEVO', 'MITSUBISHI', 6, 2024, 455000.00),
-            ('USADOS', 'HONDA', 6, 2014, 165000.00),
-            ('USADOS', 'KIA', 4, 2013, 140000.00),
-            ('NUEVO', 'VOLKSWAGEN', 4, 2024, 390000.00),
-            ('USADOS', 'TOYOTA', 6, 2015, 180000.00),
-            ('NUEVO', 'BMW', 8, 2023, 720000.00),
-            ('USADOS', 'HYUNDAI', 6, 2012, 128000.00),
-            ('USADOS', 'MERCEDES-BENZ', 8, 2013, 250000.00),
-            ('USADOS', 'NISSAN', 4, 2014, 145000.00),
-            ('USADOS', 'CHEVROLET', 6, 2015, 160000.00),
-            ('USADOS', 'FORD', 4, 2012, 135000.00),
-            ('NUEVO', 'HONDA', 4, 2024, 399000.00),
-            ('NUEVO', 'TOYOTA', 6, 2023, 470000.00),
-            ('USADOS', 'JEEP', 6, 2016, 190000.00),
-            ('USADOS', 'VOLKSWAGEN', 4, 2013, 138000.00),
-            ('USADOS', 'MITSUBISHI', 6, 2012, 129000.00),
-            ('NUEVO', 'BMW', 8, 2024, 730000.00),
-            ('USADOS', 'MERCEDES-BENZ', 8, 2015, 245000.00),
-            ('USADOS', 'HYUNDAI', 6, 2013, 140000.00),
-            ('USADOS', 'HONDA', 6, 2014, 158000.00),
-            ('NUEVO', 'FORD', 6, 2024, 460000.00),
-            ('USADOS', 'TOYOTA', 4, 2015, 148000.00),
-            ('USADOS', 'HONDA', 6, 2014, 165000.00),
-            ('NUEVO', 'KIA', 6, 2023, 405000.00),
-            ('USADOS', 'CHEVROLET', 6, 2015, 162000.00),
-            ('NUEVO', 'BMW', 4, 2024, 610000.00),
-            ('USADOS', 'VOLKSWAGEN', 6, 2013, 143000.00),
-            ('USADOS', 'TOYOTA', 4, 2012, 125000.00),
-            ('NUEVO', 'HONDA', 8, 2023, 480000.00),
-            ('USADOS', 'MITSUBISHI', 6, 2014, 150000.00),
-            ('NUEVO', 'FORD', 4, 2023, 390000.00),
-            ('USADOS', 'TESLA', 6, 2016, 230000.00),
-            ('NUEVO', 'NISSAN', 4, 2024, 415000.00),
-            ('USADOS', 'HONDA', 6, 2013, 145000.00),
-            ('USADOS', 'FORD', 4, 2015, 158000.00),
-            ('USADOS', 'CHEVROLET', 8, 2014, 198000.00),
-            ('NUEVO', 'HONDA', 6, 2023, 420000.00),
-            ('USADOS', 'MERCEDES-BENZ', 4, 2012, 142000.00),
-            ('NUEVO', 'KIA', 4, 2024, 405000.00),
-            ('USADOS', 'BMW', 6, 2014, 210000.00),
-            ('USADOS', 'TESLA', 8, 2016, 260000.00),
-            ('NUEVO', 'NISSAN', 4, 2023, 408000.00),
-            ('USADOS', 'HYUNDAI', 6, 2015, 160000.00),
-            ('NUEVO', 'FORD', 6, 2024, 455000.00),
-            ('USADOS', 'HONDA', 8, 2013, 190000.00),
-            ('USADOS', 'TOYOTA', 4, 2012, 130000.00),
-            ('NUEVO', 'KIA', 6, 2023, 420000.00),
-            ('USADOS', 'MERCEDES-BENZ', 6, 2014, 200000.00),
-            ('NUEVO', 'VOLKSWAGEN', 6, 2024, 440000.00),
-            ('USADOS', 'CHEVROLET', 4, 2015, 140000.00),
-            ('NUEVO', 'MITSUBISHI', 6, 2023, 432000.00),
-            ('USADOS', 'NISSAN', 4, 2013, 136000.00),
-            ('NUEVO', 'FORD', 8, 2024, 490000.00),
-            ('USADOS', 'HONDA', 4, 2012, 129000.00),
-            ('USADOS', 'KIA', 6, 2014, 162000.00),
-            ('NUEVO', 'BMW', 6, 2024, 645000.00),
-            ('USADOS', 'JEEP', 4, 2013, 135000.00),
-            ('USADOS', 'MERCEDES-BENZ', 4, 2015, 150000.00),
-            ('USADOS', 'TOYOTA', 8, 2014, 185000.00),
-            ('USADOS', 'FORD', 6, 2012, 137000.00),
-            ('NUEVO', 'HONDA', 4, 2023, 395000.00),
-            ('USADOS', 'VOLKSWAGEN', 6, 2015, 172000.00),
-            ('USADOS', 'MITSUBISHI', 4, 2014, 140000.00),
-            ('USADOS', 'CHEVROLET', 8, 2013, 195000.00),
-            ('USADOS', 'NISSAN', 4, 2012, 125000.00),
-            ('NUEVO', 'BMW', 6, 2023, 635000.00),
-            ('USADOS', 'FORD', 6, 2014, 170000.00),
-            ('USADOS', 'HONDA', 4, 2015, 150000.00),
-            ('USADOS', 'TOYOTA', 4, 2013, 138000.00),
-            ('NUEVO', 'HYUNDAI', 6, 2024, 410000.00)
-        ]
-
-        # Insertar los autos en la base de datos
-        for auto in autos:
-            db.execute_query(insert_query, auto)
-
-        print("✅ Autos insertados correctamente.")
+        # Confirmar la transacción
+        db.execute_query("COMMIT;")
+        print("✅ Cambios guardados exitosamente.")
 
     except Exception as e:
+        # Revertir la transacción en caso de error
+        db.execute_query("ROLLBACK;")
         print(f"❌ Error al resetear la base de datos: {e}")
+
+    finally:
+        # Cerrar la conexión a la base de datos si fue abierta
+        db.close()

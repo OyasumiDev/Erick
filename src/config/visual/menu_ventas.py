@@ -1,5 +1,3 @@
-# src/config/visual/menu_ventas.py
-
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
@@ -60,11 +58,45 @@ class SistemaVentaAutos:
             self.autos_lista = autos  # Guardar la lista de autos vendidos
             for auto in autos:
                 # Insertar los datos de cada auto en la tabla
-                self.tree.insert("", tk.END, values=(auto[0], auto[2], auto[1], auto[4], auto[3], f"${auto[5]:,.2f}"))
+                self.tree.insert("", tk.END, values=(
+                    auto["id"], 
+                    auto["marca"], 
+                    auto["estado"], 
+                    auto["anio"], 
+                    auto["cilindros"], 
+                    f"${auto['precio']:.2f}"
+                ))
         else:
             # Si no hay autos vendidos, mostrar un mensaje
             messagebox.showinfo("Sin ventas", "No hay autos vendidos.")
 
+
+    def vender_auto(self):
+        """Simula la venta de un auto (para el menú de compras)"""
+        seleccion = self.tree.selection()  # Verificar si se seleccionó un auto
+        if not seleccion:
+            messagebox.showwarning("Seleccionar auto", "Selecciona un auto para vender.")  # Advertencia si no se seleccionó
+            return
+
+        # Obtener el auto seleccionado
+        item = seleccion[0]
+        auto = self.tree.item(item)["values"]
+        auto_id = auto[0]  # Accedemos al ID usando el valor de la tupla
+
+        # Confirmación para vender el auto
+        confirmacion = messagebox.askyesno("Confirmar venta", f"¿Seguro que deseas vender el auto ID {auto_id}?")
+        if confirmacion:
+            # Si se confirma, marcarlo como vendido (Eliminando de autos y agregando a ventas)
+            try:
+                resultado = self.auto_model.vender_auto(auto_id)  # Llamamos al método de vender auto
+                if resultado["status"] == "success":
+                    messagebox.showinfo("Venta realizada", f"Auto ID {auto_id} vendido con éxito.")  # Confirmación de venta exitosa
+                    self.cargar_autos()  # Actualizar la lista de autos vendidos
+                else:
+                    messagebox.showerror("Error en la venta", resultado["message"])  # Error si la venta falla
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo realizar la venta: {e}")
+                
     def comprar_auto(self):
         """Simula la compra de un auto (para el menú de compras)"""
         seleccion = self.tree.selection()  # Verificar si se seleccionó un auto

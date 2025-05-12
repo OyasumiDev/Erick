@@ -12,6 +12,7 @@ from enums.e_autos import E_AUTO
 from config.eliminar_cache import eliminar_pycache
 from config.visual.menu_visual import mostrar_menu
 from database.reset_db import reset_db
+
 # Definimos la función para eliminar el __pycache__
 def resetear_base_datos():
     """Elimina la tabla de autos y la recrea desde cero usando los enums."""
@@ -38,7 +39,7 @@ def resetear_base_datos():
     except Exception as e:
         print(f"❌ Error al resetear base de datos: {e}")
     finally:
-        db.close()
+        db.close()  # Corregido aquí
 
 # Definimos la función principal
 def main():
@@ -74,6 +75,6 @@ def main():
     except Exception as e:
         print(f"❌ Error general en el programa: {e}")
 
-#SI EL SCRIPT SE EJECUTA DIRECTAMENTE, LLAMA A LA FUNCIÓN PRINCIPAL
+# SI EL SCRIPT SE EJECUTA DIRECTAMENTE, LLAMA A LA FUNCIÓN PRINCIPAL
 if __name__ == "__main__":
     main()
