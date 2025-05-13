@@ -1,119 +1,80 @@
-import mysql.connector
-from models.auto_model import AutoModel
-from enum import Enum
+import sys
+import os
 
-# Instanciamos AutoModel
-auto_model = AutoModel()
+# Aseguramos que Python pueda encontrar el directorio 'src'
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
-# Lista de autos a insertar
-autos = [
-    ('NUEVO', 'NISSAN', 6),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'CHEVROLET', 6),
-    ('USADOS', 'VOLKSWAGEN', 4),
-    ('USADOS', 'HONDA', 8),
-    ('NUEVO', 'TOYOTA', 4),
-    ('USADOS', 'FORD', 4),
-    ('NUEVO', 'HYUNDAI', 6),
-    ('USADOS', 'KIA', 6),
-    ('USADOS', 'HONDA', 4),
-    ('NUEVO', 'TOYOTA', 6),
-    ('USADOS', 'CHEVROLET', 6),
-    ('USADOS', 'BMW', 8),
-    ('NUEVO', 'FORD', 4),
-    ('NUEVO', 'TOYOTA', 4),
-    ('USADOS', 'KIA', 6),
-    ('USADOS', 'MERCEDES-BENZ', 6),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'TESLA', 4),
-    ('USADOS', 'JEEP', 6),
-    ('USADOS', 'TOYOTA', 6),
-    ('NUEVO', 'NISSAN', 4),
-    ('USADOS', 'FORD', 4),
-    ('USADOS', 'HONDA', 6),
-    ('NUEVO', 'BMW', 6),
-    ('USADOS', 'MITSUBISHI', 6),
-    ('USADOS', 'CHEVROLET', 4),
-    ('NUEVO', 'TESLA', 6),
-    ('USADOS', 'KIA', 6),
-    ('USADOS', 'FORD', 4),
-    ('NUEVO', 'MITSUBISHI', 6),
-    ('USADOS', 'HONDA', 6),
-    ('USADOS', 'KIA', 4),
-    ('NUEVO', 'VOLKSWAGEN', 4),
-    ('USADOS', 'TOYOTA', 6),
-    ('NUEVO', 'BMW', 8),
-    ('USADOS', 'HYUNDAI', 6),
-    ('USADOS', 'MERCEDES-BENZ', 8),
-    ('USADOS', 'NISSAN', 4),
-    ('USADOS', 'CHEVROLET', 6),
-    ('USADOS', 'FORD', 4),
-    ('NUEVO', 'HONDA', 4),
-    ('NUEVO', 'TOYOTA', 6),
-    ('USADOS', 'JEEP', 6),
-    ('USADOS', 'VOLKSWAGEN', 4),
-    ('USADOS', 'MITSUBISHI', 6),
-    ('NUEVO', 'BMW', 8),
-    ('USADOS', 'MERCEDES-BENZ', 8),
-    ('USADOS', 'HYUNDAI', 6),
-    ('USADOS', 'HONDA', 6),
-    ('NUEVO', 'FORD', 6),
-    ('USADOS', 'TOYOTA', 4),
-    ('USADOS', 'HONDA', 6),
-    ('NUEVO', 'KIA', 6),
-    ('USADOS', 'CHEVROLET', 6),
-    ('NUEVO', 'BMW', 4),
-    ('USADOS', 'VOLKSWAGEN', 6),
-    ('USADOS', 'TOYOTA', 4),
-    ('NUEVO', 'HONDA', 8),
-    ('USADOS', 'MITSUBISHI', 6),
-    ('NUEVO', 'FORD', 4),
-    ('USADOS', 'TESLA', 6),
-    ('NUEVO', 'NISSAN', 4),
-    ('USADOS', 'HONDA', 6),
-    ('USADOS', 'FORD', 4),
-    ('USADOS', 'CHEVROLET', 8),
-    ('NUEVO', 'HONDA', 6),
-    ('USADOS', 'MERCEDES-BENZ', 4),
-    ('NUEVO', 'KIA', 4),
-    ('USADOS', 'BMW', 6),
-    ('USADOS', 'TESLA', 8),
-    ('NUEVO', 'NISSAN', 4),
-    ('USADOS', 'HYUNDAI', 6),
-    ('NUEVO', 'FORD', 6),
-    ('USADOS', 'HONDA', 8),
-    ('USADOS', 'TOYOTA', 4),
-    ('NUEVO', 'KIA', 6),
-    ('USADOS', 'MERCEDES-BENZ', 6),
-    ('NUEVO', 'VOLKSWAGEN', 6),
-    ('USADOS', 'CHEVROLET', 4),
-    ('NUEVO', 'MITSUBISHI', 6),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'FORD', 8),
-    ('USADOS', 'HONDA', 4),
-    ('USADOS', 'KIA', 6),
-    ('NUEVO', 'BMW', 6),
-    ('USADOS', 'JEEP', 4),
-    ('USADOS', 'MERCEDES-BENZ', 4),
-    ('USADOS', 'TOYOTA', 8),
-    ('USADOS', 'FORD', 6),
-    ('NUEVO', 'HONDA', 4),
-    ('USADOS', 'VOLKSWAGEN', 6),
-    ('USADOS', 'MITSUBISHI', 4),
-    ('USADOS', 'CHEVROLET', 8),
-    ('USADOS', 'NISSAN', 4),
-    ('NUEVO', 'BMW', 6),
-    ('USADOS', 'FORD', 6),
-    ('USADOS', 'HONDA', 4),
-    ('USADOS', 'TOYOTA', 4),
-    ('NUEVO', 'HYUNDAI', 6)
-]
+# Importamos las librerías necesarias
+import importlib
+from database.database_mysql import DatabaseMysql
+from import_db import DatabaseImport
+from enums.e_autos import E_AUTO
+from config.eliminar_cache import eliminar_pycache
+from config.visual.menu_visual import mostrar_menu
+from database.reset_db import reset_db
 
+# Definimos la función para eliminar el __pycache__
+def resetear_base_datos():
+    """Elimina la tabla de autos y la recrea desde cero usando los enums."""
+    db = DatabaseMysql()
 
-# Insertamos los autos
-for auto in autos:
-    respuesta = auto_model.add(auto[0], auto[1], auto[2])
-    print(respuesta['message'])  # Imprime el mensaje de éxito o error
- 
+    try:
+        print("🔄 Eliminando tabla anterior (si existe)...")
+        drop_query = f"DROP TABLE IF EXISTS {E_AUTO.TABLE.value}"
+        db.execute_query(drop_query)
 
-get_all_response = auto_model.get_all()
+        print("📦 Creando nueva tabla...")
+        create_query = f"""
+        CREATE TABLE {E_AUTO.TABLE.value} (
+            {E_AUTO.ID.value} INT AUTO_INCREMENT PRIMARY KEY,
+            {E_AUTO.ESTADO_AUTO.value} ENUM('NUEVO', 'USADOS') NOT NULL,
+            {E_AUTO.MARCA_AUTO.value} VARCHAR(100) NOT NULL,
+            {E_AUTO.NUM_CILINDROS.value} TINYINT UNSIGNED NOT NULL,
+            {E_AUTO.ANIO.value} YEAR NOT NULL,
+            {E_AUTO.PRECIO.value} DECIMAL(10, 2) NOT NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        """
+        db.execute_query(create_query)
+        print("✅ Tabla creada correctamente.")
+    except Exception as e:
+        print(f"❌ Error al resetear base de datos: {e}")
+    finally:
+        db.close()  # Corregido aquí
+
+# Definimos la función principal
+def main():
+    """Punto de entrada del sistema de autos."""
+    try:
+        print("🧹 Limpiando __pycache__...")
+        eliminar_pycache()
+
+        db = DatabaseMysql()
+        if db.is_autos_empty():
+            print("🔁 Reiniciando base de datos...")
+            resetear_base_datos()
+
+            print("📥 Cargando autos por defecto...")
+            db_importador = DatabaseImport()
+            db_importador.import_db()
+        else:
+            print("✅ Base de datos ya tiene autos, no se reinicia.")
+
+        print("🚗 Iniciando menú visual...")
+
+        try:
+            # Importamos y mostramos el menú visual principal
+            menu_visual = importlib.import_module('config.visual.menu_visual')
+            menu_visual.mostrar_menu()
+        except ModuleNotFoundError as e:
+            print(f"❌ No se pudo importar 'menu_visual': {e}")
+        except AttributeError:
+            print("❌ El módulo 'menu_visual' no tiene la función 'mostrar_menu'.")
+        except Exception as e:
+            print(f"❌ Error inesperado al iniciar el menú visual: {e}")
+
+    except Exception as e:
+        print(f"❌ Error general en el programa: {e}")
+
+# SI EL SCRIPT SE EJECUTA DIRECTAMENTE, LLAMA A LA FUNCIÓN PRINCIPAL
+if __name__ == "__main__":
+    main()

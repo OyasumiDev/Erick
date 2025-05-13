@@ -1,9 +1,7 @@
+from mysql.connector import pooling, Error
 from config.config import DB_HOST, DB_USER, DB_PASSWORD, DB_DATABASE, DB_PORT
-import mysql.connector as mysql
-from mysql.connector import Error
-from enums.e_autos import E_AUTO 
+from enums.e_autos import E_AUTO
 from helpers.class_singletone import class_singleton
-# Asegúrate de importar correctamente tu Enum
 
 @class_singleton
 class DatabaseMysql:
@@ -13,94 +11,130 @@ class DatabaseMysql:
         self.user = DB_USER
         self.password = DB_PASSWORD
         self.database = DB_DATABASE
+        self.pool = None
+        self._initialize_connection_pool()
 
-        self._verificar_y_crear_base_datos()
-        self._connect()
-
-    def _verificar_y_crear_base_datos(self) -> bool:
-        """Verifica si existe la base de datos y la crea si no existe."""
+    def _initialize_connection_pool(self):
         try:
-            tmp = mysql.connect(
-                host=self.host,
-                port=self.port,
-                user=self.user,
-                password=self.password
+            dbconfig = {
+                "host": self.host,
+                "port": self.port,
+                "user": self.user,
+                "password": self.password,
+                "database": self.database
+            }
+            self.pool = pooling.MySQLConnectionPool(
+                pool_name="mypool",
+                pool_size=5,
+                **dbconfig
             )
-            tmp.autocommit = True
-            cur = tmp.cursor()
-            cur.execute(
-                "SELECT SCHEMA_NAME FROM information_schema.schemata WHERE schema_name = %s",
-                (self.database,)
-            )
-            if cur.fetchone() is None:
-                cur.execute(
-                    f"CREATE DATABASE `{self.database}` "
-                    "DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-                )
-                print("🛠️ Base de datos creada")
-            cur.close()
-            tmp.close()
+            print("✅ Pool de conexiones inicializado exitosamente")
         except Error as e:
-            print(f"❌ Error al verificar/crear BD: {e}")
-            return False
-        return True
+            print(f"❌ Error al inicializar el pool de conexiones: {e}")
 
-    def _connect(self) -> None:
-        """Conecta a la base de datos."""
+    def _get_connection(self):
         try:
-            self.connection = mysql.connect(
-                host=self.host,
-                port=self.port,
-                user=self.user,
-                password=self.password,
-                database=self.database
-            )
-            print("✅ Conexión exitosa a la base de datos")
+            if self.pool:
+                return self.pool.get_connection()
+            print("❌ Pool de conexiones no inicializado")
         except Error as e:
-            print(f"❌ Error al conectar: {e}")
+            print(f"❌ Error al obtener conexión: {e}")
+        return None
 
-    def disconnect(self) -> None:
-        """Cierra la conexión a la base de datos."""
-        if hasattr(self, "connection") and self.connection:
-            self.connection.close()
-            print("ℹ️ Conexión cerrada a la base de datos")
+    def execute_query(self, query, params=None):
+        conn = self._get_connection()
+        if not conn:
+            return {"status": "error", "message": "No se pudo obtener conexión"}
 
-    def run_query(self, query: str, params: tuple = ()) -> None:
-        """Ejecuta una consulta de modificación (INSERT, UPDATE, DELETE)."""
         try:
-            with self.connection.cursor() as cursor:
-                cursor.execute(query, params)
-            self.connection.commit()
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            if query.strip().upper().startswith("SELECT"):
+                result = cursor.fetchall()
+                return {"status": "success", "data": result}
+            else:
+                conn.commit()
+                return {"status": "success", "message": "Consulta ejecutada correctamente"}
         except Error as e:
-            print(f"❌ Error ejecutando query: {e}")
-            raise
+            print(f"❌ Error en execute_query: {e}")
+            return {"status": "error", "message": str(e)}
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
+
+    def execute_many(self, query, params_list):
+        conn = self._get_connection()
+        if not conn:
+            return {"status": "error", "message": "No se pudo obtener la conexión"}
+
+        try:
+            cursor = conn.cursor()
+            cursor.executemany(query, params_list)
+            conn.commit()
+            return {"status": "success", "message": "Inserción masiva realizada correctamente"}
+        except Error as e:
+            print(f"❌ Error en execute_many: {e}")
+            return {"status": "error", "message": str(e)}
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
 
     def get_one(self, query: str, params: tuple = (), dictionary: bool = True):
-        """Obtiene un solo registro."""
+        conn = self._get_connection()
+        if not conn:
+            return {"status": "error", "message": "No se pudo obtener la conexión"}
+
         try:
-            with self.connection.cursor(dictionary=dictionary) as cursor:
-                cursor.execute(query, params)
-                return cursor.fetchone()
+            cursor = conn.cursor(buffered=True, dictionary=dictionary)
+            cursor.execute(query, params)
+            result = cursor.fetchone()
+            if result:
+                return {"status": "success", "data": result}
+            return {"status": "error", "message": "No se encontraron datos"}
         except Error as e:
             print(f"❌ Error en get_one: {e}")
-            return None
+            return {"status": "error", "message": str(e)}
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
 
-    def get_all(self, query: str, params: tuple = (), dictionary: bool = True):
-        """Obtiene una lista de registros."""
+    def get_all(self, query, params=None):
+        conn = self._get_connection()
+        if not conn:
+            return {"status": "error", "message": "No se pudo obtener la conexión", "data": []}
+
         try:
-            with self.connection.cursor(dictionary=dictionary) as cursor:
-                cursor.execute(query, params)
-                return cursor.fetchall()
+            cursor = conn.cursor(buffered=True, dictionary=True)
+            cursor.execute(query, params or ())
+            rows = cursor.fetchall()
+            return {"status": "success", "data": rows}
         except Error as e:
             print(f"❌ Error en get_all: {e}")
-            return []
+            return {"status": "error", "message": str(e), "data": []}
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except:
+                pass
 
     def is_autos_empty(self) -> bool:
-        """Verifica si la tabla de autos está vacía."""
         try:
             query = f"SELECT COUNT(*) AS total FROM `{E_AUTO.TABLE.value}`"
             result = self.get_one(query)
-            return result.get("total", 0) == 0
+            return result.get("data", {}).get("total", 0) == 0
         except Exception as e:
             print(f"❌ Error verificando tabla autos: {e}")
             return True
+
+    def close(self):
+        print("ℹ️ Cierre manual del pool no necesario en mysql.connector, pero método presente por estructura.")

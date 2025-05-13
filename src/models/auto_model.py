@@ -1,65 +1,134 @@
-from enums.e_autos import E_AUTO
 from database.database_mysql import DatabaseMysql
 
-
 class AutoModel:
+    """Clase que maneja las operaciones relacionadas con autos."""
+
     def __init__(self):
         self.db = DatabaseMysql()
-        self._ensure_table()
 
-    def _ensure_table(self) -> None:
-        """Verifica si la tabla de autos existe, y la crea si no."""
-        query = """
-            SELECT COUNT(*) AS c
-            FROM information_schema.tables
-            WHERE table_schema = %s AND table_name = %s
-        """
-        result = self.db.get_one(query, (self.db.database, E_AUTO.TABLE.value))
-        if result.get("c", 0) == 0:
-            print(f"⚠️ La tabla {E_AUTO.TABLE.value} no existe. Creando...")
-            create_query = f"""
-                CREATE TABLE IF NOT EXISTS {E_AUTO.TABLE.value} (
-                    {E_AUTO.ID.value} INT AUTO_INCREMENT PRIMARY KEY,
-                    {E_AUTO.ESTADO_AUTO.value} ENUM('NUEVO', 'USADOS') NOT NULL,
-                    {E_AUTO.MARCA_AUTO.value} VARCHAR(100) NOT NULL,
-                    {E_AUTO.NUM_CILINDROS.value} TINYINT UNSIGNED NOT NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    def obtener_autos_nuevos(self):
+        """Obtiene la lista de autos con estado 'NUEVO' desde la base de datos."""
+        try:
+            query = """
+                SELECT id, estado, marca, cilindros, anio, precio
+                FROM autos
+                WHERE estado = %s
             """
-            self.db.run_query(create_query)
-            print(f"✅ Tabla {E_AUTO.TABLE.value} creada correctamente.")
+            params = ("NUEVO",)
+            result = self.db.get_all(query, params)
+
+            if result["status"] == "success":
+                return result["data"]
+            else:
+                return {"status": "error", "message": result.get("message", "Error desconocido")}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def get_autos_vendidos(self):
+        """Obtiene todos los autos vendidos desde la base de datos."""
+        query = "SELECT id, marca, estado, cilindros, anio, precio FROM ventas;"
+        result = self.db.get_all(query)
+        
+        if result["status"] == "success" and result["data"]:
+            # Los datos devueltos se formatean como una lista de tuplas
+            return result["data"]
         else:
-            print(f"✔️ La tabla {E_AUTO.TABLE.value} ya existe.")
+            return {"status": "error", "message": result.get("message", "Error desconocido")}
 
+    def get_compras(self):
+        """Obtiene todos los autos desde la base de datos."""
+        query = "SELECT id, estado, marca, cilindros, anio, precio FROM autos"
+        try:
+            result = self.db.get_all(query)
+            if result["status"] == "success" and result["data"]:
+                return result["data"]
+            else:
+                raise Exception("No se encontraron autos.")
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
-    def add(self, estado_auto: str, marca: str, cilindros: int) -> dict:
+    def add(self, marca, anio, estado, cilindros, precio):
         """Agrega un nuevo auto a la base de datos."""
-        query = f"""
-            INSERT INTO {E_AUTO.TABLE.value} (
-                {E_AUTO.ESTADO_AUTO.value},
-                {E_AUTO.MARCA_AUTO.value},
-                {E_AUTO.NUM_CILINDROS.value}
-            ) VALUES (%s, %s, %s)
-        """
         try:
-            self.db.run_query(query, (estado_auto, marca, cilindros))
-            return {"status": "success", "message": "Auto agregado correctamente"}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al agregar auto: {ex}"}
+            if estado not in ["NUEVO", "USADO"]:
+                raise Exception("Estado inválido")
 
-    def get_all(self) -> dict:
-        """Obtiene todos los autos registrados."""
-        query = f"SELECT * FROM {E_AUTO.TABLE.value} ORDER BY {E_AUTO.ID.value} ASC"
-        try:
-            data = self.db.get_all(query)
-            return {"status": "success", "data": data}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al obtener autos: {ex}"}
+            query = """
+                INSERT INTO autos (marca, anio, estado, cilindros, precio)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            params = (marca, anio, estado, cilindros, precio)
+            result = self.db.execute_query(query, params)
 
-    def get_by_id(self, auto_id: int) -> dict:
-        """Obtiene un auto por su ID."""
-        query = f"SELECT * FROM {E_AUTO.TABLE.value} WHERE {E_AUTO.ID.value} = %s"
+            if result["status"] == "success":
+                return {"status": "success", "message": f"Auto {marca} {anio} agregado correctamente"}
+            else:
+                raise Exception(result["message"])
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
+    def vender_auto(self, auto_id):
+        """Realiza la venta de un auto y lo elimina de la tabla de autos."""
         try:
-            data = self.db.get_one(query, (auto_id,))
-            return {"status": "success", "data": data}
-        except Exception as ex:
-            return {"status": "error", "message": f"Error al obtener auto: {ex}"}
+            # Comienza una transacción
+            conn = self.db._get_connection()
+            if not conn:
+                return {"status": "error", "message": "No se pudo obtener conexión"}
+
+            cursor = conn.cursor()
+            cursor.execute("START TRANSACTION")
+
+            # Obtenemos el auto que se va a vender
+            query = "SELECT id, marca, cilindros, anio, precio, estado FROM autos WHERE id = %s"
+            params = (auto_id,)
+            auto_result = self.db.get_one(query, params)
+
+            if auto_result["status"] == "error" or not auto_result["data"]:
+                return {"status": "error", "message": "Auto no encontrado"}
+
+            auto = auto_result["data"]
+
+            # Insertamos el auto en la tabla de ventas
+            insert_query = """
+                INSERT INTO ventas (id, marca, cilindros, anio, precio, estado)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            insert_params = (auto["id"], auto["marca"], auto["cilindros"], auto["anio"], auto["precio"], auto["estado"])
+            insert_result = self.db.execute_query(insert_query, insert_params)
+
+            if insert_result["status"] != "success":
+                cursor.execute("ROLLBACK")
+                cursor.close()
+                conn.close()
+                return {"status": "error", "message": "Error al insertar en ventas"}
+
+            # Eliminamos el auto de la tabla de autos
+            delete_query = "DELETE FROM autos WHERE id = %s"
+            delete_result = self.db.execute_query(delete_query, (auto_id,))
+
+            if delete_result["status"] != "success":
+                cursor.execute("ROLLBACK")
+                cursor.close()
+                conn.close()
+                return {"status": "error", "message": "Error al eliminar el auto de la tabla autos"}
+
+            cursor.execute("COMMIT")
+            cursor.close()
+            conn.close()
+
+            # Verificación adicional
+            select_query = "SELECT * FROM ventas WHERE id = %s"
+            select_params = (auto_id,)
+            ventas_result = self.db.get_all(select_query, select_params)
+            if ventas_result["status"] == "success" and ventas_result["data"]:
+                print(f"Auto con ID {auto_id} insertado en ventas.")
+            else:
+                print(f"Error al insertar auto con ID {auto_id} en ventas.")
+
+            return {"status": "success", "message": "Auto vendido correctamente"}
+        except Exception as e:
+            if conn:
+                cursor.execute("ROLLBACK")
+                cursor.close()
+                conn.close()
+            return {"status": "error", "message": str(e)}
